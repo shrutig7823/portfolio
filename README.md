@@ -1,0 +1,38 @@
+# Shruti Gaikwad: portfolio
+
+A one-page portfolio in plain HTML and CSS. No framework and no build step, so Vercel serves it as it is.
+
+## What is on it
+- **Projects I built:** Homli (live) and the aptitude game (in progress).
+- **Case studies, PRDs and assignments:** nine PDFs with a thumbnail and a short summary each.
+- **How I work, background and contact.**
+
+## Files
+| File | Job |
+|---|---|
+| `index.html` | The whole page |
+| `styles.css` | The look. Colours, spacing and fonts are tokens at the top |
+| `vercel.json` | Security headers and long caching for `assets/` |
+| `assets/decks/` | The nine PDFs |
+| `assets/img/` | A cover thumbnail for each PDF |
+
+## Run it on your laptop
+```
+python -m http.server 8126
+```
+Open http://localhost:8126
+
+## Change something
+- **Text:** edit `index.html`.
+- **A project card:** copy an existing `<article class="card">`, change the text, add the PDF to `assets/decks/` and a thumbnail to `assets/img/`.
+- **Colours:** change the tokens at the top of `styles.css`.
+
+## Deploy on Vercel
+1. Put this folder in a GitHub repository (the repository's root should contain `index.html`).
+2. On vercel.com, choose Add New, then Project, and import the repository.
+3. Framework Preset: **Other**. Leave the build command and output directory empty. Deploy.
+Every push to `main` then redeploys the site automatically.
+
+## Honest notes
+- Homli's page says it was built with an AI assistant, and it says what is and is not validated. Keep that wording true if you edit it.
+- Case study PDFs are the author's own submissions. Product Space and Instagram figures marked "illustrative" in the decks are assumptions, not data.
