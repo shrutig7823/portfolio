@@ -5,7 +5,7 @@ A one-page portfolio in plain HTML, CSS and a little JavaScript. No framework an
 ## What is on it
 - **Projects I built:** Homli (live) and the aptitude game (in progress).
 - **Case studies, PRDs and assignments:** nine PDFs with a thumbnail and a short summary each.
-- **How I work, background and contact.**
+- **How I work, internships, education and contact.**
 
 ## Files
 | File | Job |
