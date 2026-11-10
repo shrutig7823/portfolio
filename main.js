@@ -32,6 +32,20 @@
     counters.forEach(function (el) { el.textContent = "0"; co.observe(el); });
   }
 
+  /* Case study filter: All, case study, teardown, RCA, metric questions. */
+  var segs = document.getElementById("segs");
+  if (segs) {
+    var cards = document.querySelectorAll("#grid .card"), empties = document.querySelectorAll("[data-empty]");
+    segs.addEventListener("click", function (ev) {
+      var b = ev.target.closest(".seg");
+      if (!b) return;
+      var f = b.getAttribute("data-filter"), shown = 0;
+      segs.querySelectorAll(".seg").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on ? "true" : "false"); });
+      cards.forEach(function (c) { var show = f === "all" || c.getAttribute("data-cat") === f; c.hidden = !show; if (show) shown++; });
+      empties.forEach(function (m) { m.hidden = !(shown === 0 && m.getAttribute("data-empty") === f); });
+    });
+  }
+
   /* Highlight the menu link of the section being read. */
   var navLinks = document.querySelectorAll("nav a[data-nav]");
   if ("IntersectionObserver" in window) {
