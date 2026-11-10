@@ -131,7 +131,7 @@ section.wrap { padding-top: var(--s7); }
 .card[hidden] { display: none; }
 
 /* case study cards */
-.grid { display: grid; gap: var(--s5); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid { display: grid; gap: var(--s5); grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: dense; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; display: flex; flex-direction: column; transition: transform .25s, box-shadow .25s, border-color .25s; }
 .card:hover { transform: translateY(-3px); border-color: var(--line-2); box-shadow: 0 14px 34px rgba(28, 27, 25, .1); }
 .thumb { display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--soft); border-bottom: 1px solid var(--line); }
@@ -170,6 +170,19 @@ section.wrap { padding-top: var(--s7); }
 .card.wide .stages ol { gap: var(--s3); }
 @media (max-width: 960px) { .card.wide { flex-direction: column; } .card.wide .thumb { flex: none; aspect-ratio: 16 / 9; border-right: 0; border-bottom: 1px solid var(--line); } .card.wide .stages ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } .card.wide .stages li:not(:last-child)::after { display: none; } }
 @media (max-width: 620px) { .card.wide .stages ol { grid-template-columns: minmax(0, 1fr); } }
+.card.zomato { position: relative; }
+.expander { display: none; }
+.js .expander { display: grid; place-items: center; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--surface); color: var(--accent); cursor: pointer; box-shadow: 0 2px 8px rgba(28, 27, 25, .12); transition: background .2s, color .2s, box-shadow .2s; z-index: 2; }
+.js .expander:hover { background: var(--accent); color: #fff; box-shadow: 0 6px 16px rgba(194, 65, 12, .3); }
+.expander svg { transition: transform .35s ease; }
+.card.wide .expander svg { transform: rotate(180deg); }
+.js .card.zomato:not(.wide) .stages { display: none; }
+.js .card.zomato:not(.wide) .card-body { padding-right: 64px; }
+.card.wide .card-body { padding-right: 64px; }
+.card.wide .hint { display: none; }
+.hint { color: var(--muted); font-size: 13.5px; }
+.card.wide .stages { animation: stagesIn .5s ease both; }
+@keyframes stagesIn { from { opacity: 0; transform: translateX(-16px); } }
 .card-link { margin: auto 0 0; padding-top: var(--s4); font-size: 14.5px; font-weight: 600; }
 .card-link a { text-decoration: none; }
 .card-link a:hover { text-decoration: underline; }

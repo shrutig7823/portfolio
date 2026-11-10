@@ -60,10 +60,16 @@
     });
   }
 
-  /* The Zomato card spans the row while its stages are open. */
-  document.querySelectorAll(".stages").forEach(function (d) {
-    d.addEventListener("toggle", function () { var c = d.closest(".card"); if (c) c.classList.toggle("wide", d.open); });
-  });
+  /* The Zomato card: the arrow expands it across the row and reveals its four stages. */
+  var ex = document.querySelector(".expander");
+  if (ex) {
+    ex.addEventListener("click", function () {
+      var c = ex.closest(".card"), open = c.classList.toggle("wide");
+      ex.setAttribute("aria-expanded", open ? "true" : "false");
+      ex.setAttribute("aria-label", open ? "Hide the four stages" : "Show the four stages");
+      if (open) c.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+    });
+  }
 
   /* Highlight the menu link of the section being read. */
   var navLinks = document.querySelectorAll("nav a[data-nav]");
