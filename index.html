@@ -60,7 +60,7 @@
           <span class="hat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg></span>
           <h3>I build it</h3>
           <p>I love technology, and AI most of all. I design and ship my own products, automate the boring parts, and fix what is broken.</p>
-          <p class="hat-links"><a href="#homli">Homli</a><a href="#aptitude">Quotient Up</a><a href="#jobflow">n8n automation</a><a href="#boss">Open source</a></p>
+          <p class="hat-links"><a href="#aptitude">Quotient Up</a><a href="#homli">Homli</a><a href="#jobflow">n8n automation</a><a href="#boss">Open source</a></p>
         </article>
         <article class="hat prod reveal" style="--d:80ms">
           <span class="hat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg></span>
@@ -87,9 +87,39 @@
     <section class="wrap" id="projects">
       <h2 class="reveal">Projects</h2>
 
-      <article class="feature reveal" id="homli">
+      <article class="feature reveal" id="aptitude">
         <div class="feature-main">
           <p class="status">Case 01 &nbsp;&middot;&nbsp; Deployed, version 1</p>
+          <h3>Quotient Up: aptitude practice as a daily climb</h3>
+          <p class="role-line"><strong>My role:</strong> Product owner and developer</p>
+          <dl class="outline">
+            <dt>Problem</dt><dd>Aptitude preparation usually means opening a question bank, solving MCQs, seeing a score and leaving. There is little reason to come back, and little feedback on what is actually improving.</dd>
+            <dt>Goal</dt><dd>Turn practice into a daily climb, and use real answers to show what is weak, what is improving and what to retry.</dd>
+            <dt>Solution</dt><dd>Six illustrated worlds, one per skill area (quant, logic, data, verbal, spatial and applied reasoning), with 120 levels and 600 questions. A Learn tab shows mastery per skill, and every missed question can be retried as a fresh version of the same kind.</dd>
+            <dt>Results</dt><dd>Published as a web app that works on phones and computers, with 38 automated tests. Not yet validated with a wider group of users.</dd>
+          </dl>
+          <p class="actions">
+            <a class="btn primary" href="https://quotient-up.netlify.app" target="_blank" rel="noopener">Open the live app &#8599;</a>
+            <a class="btn" href="https://github.com/shrutig7823/quotient-up" target="_blank" rel="noopener">Source code</a>
+          </p>
+        </div>
+        <aside class="feature-side" aria-label="Technical role and decisions on Quotient Up">
+          <h4>What I owned</h4>
+          <ul>
+            <li><strong>Product:</strong> the learning loop, the six-world structure, level difficulty mix, and what counts as progress.</li>
+            <li><strong>Question engine:</strong> 27 generators that produce unlimited, reproducible questions. Each carries an independent cross-check and is discarded if it fails.</li>
+            <li><strong>Mastery logic:</strong> computed from real answers. Replays count less, harder questions count more, and a skill shows "not enough data" instead of an invented number.</li>
+            <li><strong>Stack:</strong> React Native (Expo), TypeScript, Zustand, Reanimated and SVG scenes drawn in code.</li>
+            <li><strong>Quality:</strong> exact answer checking for fractions, lists and times, plus 38 automated tests.</li>
+          </ul>
+          <h4>Scope and limits</h4>
+          <p>Guest-first: progress is saved on the device only. Accounts, a daily challenge and survival rooms are planned, not built. Questions are original and their difficulty is editorial, not calibrated on learner data. I directed the build with an AI coding assistant (Claude Code).</p>
+        </aside>
+      </article>
+
+      <article class="feature reveal" id="homli">
+        <div class="feature-main">
+          <p class="status">Case 02 &nbsp;&middot;&nbsp; Deployed, version 1</p>
           <h3>Homli: trusted PG discovery</h3>
           <p class="role-line"><strong>My role:</strong> Product owner and full-stack developer</p>
           <dl class="outline">
@@ -122,36 +152,6 @@
           </ul>
           <h4>Scope and limits</h4>
           <p>A prototype with 11 PGs, from firsthand information and public pages. Booking is a demo: nothing is sent to a PG. I directed the build with an AI coding assistant (Claude Code), and tested and deployed it myself. The problem comes from one user's experience and is not yet validated at scale.</p>
-        </aside>
-      </article>
-
-      <article class="feature reveal" id="aptitude">
-        <div class="feature-main">
-          <p class="status">Case 02 &nbsp;&middot;&nbsp; Deployed, version 1</p>
-          <h3>Quotient Up: aptitude practice as a daily climb</h3>
-          <p class="role-line"><strong>My role:</strong> Product owner and developer</p>
-          <dl class="outline">
-            <dt>Problem</dt><dd>Aptitude preparation usually means opening a question bank, solving MCQs, seeing a score and leaving. There is little reason to come back, and little feedback on what is actually improving.</dd>
-            <dt>Goal</dt><dd>Turn practice into a daily climb, and use real answers to show what is weak, what is improving and what to retry.</dd>
-            <dt>Solution</dt><dd>Six illustrated worlds, one per skill area (quant, logic, data, verbal, spatial and applied reasoning), with 120 levels and 600 questions. A Learn tab shows mastery per skill, and every missed question can be retried as a fresh version of the same kind.</dd>
-            <dt>Results</dt><dd>Published as a web app that works on phones and computers, with 38 automated tests. Not yet validated with a wider group of users.</dd>
-          </dl>
-          <p class="actions">
-            <a class="btn primary" href="https://quotient-up.netlify.app" target="_blank" rel="noopener">Open the live app &#8599;</a>
-            <a class="btn" href="https://github.com/shrutig7823/quotient-up" target="_blank" rel="noopener">Source code</a>
-          </p>
-        </div>
-        <aside class="feature-side" aria-label="Technical role and decisions on Quotient Up">
-          <h4>What I owned</h4>
-          <ul>
-            <li><strong>Product:</strong> the learning loop, the six-world structure, level difficulty mix, and what counts as progress.</li>
-            <li><strong>Question engine:</strong> 27 generators that produce unlimited, reproducible questions. Each carries an independent cross-check and is discarded if it fails.</li>
-            <li><strong>Mastery logic:</strong> computed from real answers. Replays count less, harder questions count more, and a skill shows "not enough data" instead of an invented number.</li>
-            <li><strong>Stack:</strong> React Native (Expo), TypeScript, Zustand, Reanimated and SVG scenes drawn in code.</li>
-            <li><strong>Quality:</strong> exact answer checking for fractions, lists and times, plus 38 automated tests.</li>
-          </ul>
-          <h4>Scope and limits</h4>
-          <p>Guest-first: progress is saved on the device only. Accounts, a daily challenge and survival rooms are planned, not built. Questions are original and their difficulty is editorial, not calibrated on learner data. I directed the build with an AI coding assistant (Claude Code).</p>
         </aside>
       </article>
 
