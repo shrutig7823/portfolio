@@ -100,15 +100,30 @@
         </aside>
       </article>
 
-      <article class="feature reveal one" id="aptitude">
+      <article class="feature reveal" id="aptitude">
         <div class="feature-main">
-          <p class="status">Case 02 &nbsp;&middot;&nbsp; In development</p>
-          <h3>Aptitude practice game</h3>
+          <p class="status">Case 02 &nbsp;&middot;&nbsp; Version 1 built, launch pending</p>
+          <h3>Quotient Up: aptitude practice as a daily climb</h3>
           <p class="role-line"><strong>My role:</strong> Product owner and developer</p>
-          <p class="problem"><strong>Problem.</strong> Aptitude preparation is repetitive and hard to stick to: open a question bank, solve MCQs, see a score, leave.</p>
-          <p><strong>Approach.</strong> A game with six aptitude tracks, short levels, interactive question types instead of only MCQs, a daily challenge with a streak, and concept mastery computed from real answers. The first version covers two genres of 10 levels each, with stars, XP and coins.</p>
-          <p class="small muted">Status: product brief written and the build is under way. The problem is a hypothesis and has not been tested with users yet.</p>
+          <dl class="outline">
+            <dt>Problem</dt><dd>Aptitude preparation usually means opening a question bank, solving MCQs, seeing a score and leaving. There is little reason to come back, and little feedback on what is actually improving.</dd>
+            <dt>Goal</dt><dd>Turn practice into a daily climb, and use real answers to show what is weak, what is improving and what to retry.</dd>
+            <dt>Solution</dt><dd>Six illustrated worlds, one per skill area (quant, logic, data, verbal, spatial and applied reasoning), with 120 levels and 600 questions. A Learn tab shows mastery per skill, and every missed question can be retried as a fresh version of the same kind.</dd>
+            <dt>Results</dt><dd>A working app tested from a first-time visitor's view, with 38 automated tests. Not yet published and not yet tried by users.</dd>
+          </dl>
         </div>
+        <aside class="feature-side" aria-label="Technical role and decisions on Quotient Up">
+          <h4>What I owned</h4>
+          <ul>
+            <li><strong>Product:</strong> the learning loop, the six-world structure, level difficulty mix, and what counts as progress.</li>
+            <li><strong>Question engine:</strong> 27 generators that produce unlimited, reproducible questions. Each carries an independent cross-check and is discarded if it fails.</li>
+            <li><strong>Mastery logic:</strong> computed from real answers. Replays count less, harder questions count more, and a skill shows "not enough data" instead of an invented number.</li>
+            <li><strong>Stack:</strong> React Native (Expo), TypeScript, Zustand, Reanimated and SVG scenes drawn in code.</li>
+            <li><strong>Quality:</strong> exact answer checking for fractions, lists and times, plus 38 automated tests.</li>
+          </ul>
+          <h4>Scope and limits</h4>
+          <p>Guest-first: progress is saved on the device only. Accounts, a daily challenge and survival rooms are planned, not built. Questions are original and their difficulty is editorial, not calibrated on learner data. I directed the build with an AI coding assistant (Claude Code).</p>
+        </aside>
       </article>
 
       <article class="feature reveal one" id="boss">
