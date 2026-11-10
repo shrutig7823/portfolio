@@ -60,6 +60,11 @@
     });
   }
 
+  /* The Zomato card spans the row while its stages are open. */
+  document.querySelectorAll(".stages").forEach(function (d) {
+    d.addEventListener("toggle", function () { var c = d.closest(".card"); if (c) c.classList.toggle("wide", d.open); });
+  });
+
   /* Highlight the menu link of the section being read. */
   var navLinks = document.querySelectorAll("nav a[data-nav]");
   if ("IntersectionObserver" in window) {
