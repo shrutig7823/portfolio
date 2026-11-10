@@ -26,7 +26,7 @@
         <a href="#projects" data-nav="projects">Projects</a>
         <a href="#experience" data-nav="experience">Experience</a>
         <a href="#case-studies" data-nav="case-studies">Case studies</a>
-        <a href="#extracurricular" data-nav="extracurricular">Extracurricular</a>
+        <a href="#extracurricular" data-nav="extracurricular">Beyond work</a>
         <a href="#contact" data-nav="contact">Contact</a>
       </nav>
       <div class="bar-links">
@@ -38,9 +38,11 @@
 
   <main id="main">
     <section class="hero wrap" id="top">
+      <span class="blob b1" aria-hidden="true"></span><span class="blob b2" aria-hidden="true"></span>
       <p class="kicker">Aspiring Product Manager</p>
       <h1>Shruti Gaikwad</h1>
-      <p class="lede">I turn user problems into working products. I have spent the last two years in product, growth and analytics internships, most recently at FirstClub.</p>
+      <p class="tagline" aria-live="off">I <span class="rot" id="rot" data-words='["build products","ship code","lead teams","chase metrics","love messy problems"]'>build products</span><span class="dot-end">.</span></p>
+      <p class="lede">An engineer by training and a product person by choice. I turn messy user problems into things people use, and I like leading the people who build them.</p>
       <div class="creds" aria-label="Education and recognition">
         <div class="cred main"><span class="cred-label">Education</span><b>BITS Pilani, Goa</b><span class="degrees"><strong>B.E.</strong> Mechanical Engineering</span><span class="degrees"><strong>M.Sc.</strong> Chemistry</span></div>
         <div class="cred"><span class="cred-label">Recognition</span><b>Top 5%</b><span>NextLeap Product Management Fellowship</span></div>
@@ -52,18 +54,33 @@
       </p>
     </section>
 
-    <section class="wrap" id="education">
-      <h2 class="reveal">Education and training</h2>
-      <ul class="plain reveal">
-        <li><strong>B.E. Mechanical Engineering and M.Sc. Chemistry</strong>, BITS Pilani, Goa campus, 2022 to 2027.</li>
-        <li><strong>Product Management Fellowship</strong>, NextLeap. Top 5% of the cohort and named Top Fellow (October 2024).</li>
-      </ul>
+    <section class="wrap" id="hats" aria-label="Three things I do">
+      <div class="hats">
+        <article class="hat tech reveal">
+          <span class="hat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg></span>
+          <h3>I build it</h3>
+          <p>I love technology, and AI most of all. I design and ship my own products, automate the boring parts, and fix what is broken.</p>
+          <p class="hat-links"><a href="#homli">Homli</a><a href="#aptitude">Quotient Up</a><a href="#jobflow">n8n automation</a><a href="#boss">Open source</a></p>
+        </article>
+        <article class="hat prod reveal" style="--d:80ms">
+          <span class="hat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg></span>
+          <h3>I think it through</h3>
+          <p>Eight internships in product, growth and analytics. I start from the user's problem, test ideas with experiments, and explain the trade-offs.</p>
+          <p class="hat-links"><a href="#experience">Experience</a><a href="#case-studies">Case studies</a><a href="#skills">Skills</a></p>
+        </article>
+        <article class="hat lead reveal" style="--d:160ms">
+          <span class="hat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg></span>
+          <h3>I lead the room</h3>
+          <p>I convened a mess that feeds 3,000 to 4,000 people, raised sponsorships for two college events, and supported 300+ placements.</p>
+          <p class="hat-links"><a href="#extracurricular">Leadership and life</a></p>
+        </article>
+      </div>
     </section>
 
     <section class="wrap" id="how">
       <h2 class="reveal">About and approach</h2>
       <div class="about reveal">
-        <p>I am pursuing a B.E. in Mechanical Engineering and an M.Sc. in Chemistry at BITS Pilani, Goa. I moved into product through the NextLeap fellowship, where I finished in the top 5%, and have since done eight internships across product, growth and analytics.</p>
+        <p>I came to product from engineering and chemistry. The NextLeap fellowship, where I finished in the top 5%, gave me the craft, and eight internships across product, growth and analytics gave me the practice.</p>
         <p>I love technology, and AI most of all, and I enjoy working with it to build solutions for real users. At Talentlo I built an agentic AI matching workflow for recruiters. Outside work I design and ship my own products, Homli and Quotient Up, working with AI coding tools. I have also fixed a bug in an open-source console and trained a model to predict machine downtime. I start from the user's problem, then choose the technology that solves it.</p>
         <p>I like problems where the facts are messy, and I show my reasoning, including what I do not yet know.</p>
       </div>
@@ -311,8 +328,15 @@
     </section>
 
     <section class="wrap" id="extracurricular">
-      <h2 class="reveal">Extracurricular</h2>
-      <p class="lede reveal">Clubs, committees and volunteering at BITS Pilani, Goa, and the things I do away from work.</p>
+      <h2 class="reveal">Leadership and life beyond work</h2>
+      <p class="lede reveal">Most of what I know about people, scale and pressure I learned outside a job description.</p>
+      <div class="nums reveal">
+        <div><b>3,000+</b><span>students and faculty served by the mess I convened</span></div>
+        <div><b>300+</b><span>placements supported as a placement associate</span></div>
+        <div><b>600+</b><span>companies reached in recruiter outreach</span></div>
+        <div><b>₹3L</b><span>sponsorships raised for TEDxBITSGoa and Quark</span></div>
+        <div><b>30+</b><span>students supported one on one as a peer volunteer</span></div>
+      </div>
       <div class="eca">
         <div class="reveal"><h3>Committees, units and departments</h3><ul>
           <li><strong>Mess Convener, BITS Pilani Goa Mess Committee</strong> (Sep 2025 to Aug 2026). Built a student-inflow prediction system to improve meal planning and reduce food waste, for a mess serving 3,000 to 4,000 students and faculty.</li>
@@ -324,10 +348,10 @@
           <li><strong>YESS Program, Rahat Foundation.</strong> Selected as 1 of 20 student volunteers for a campus suicide-prevention and peer-support initiative. Gave regular one-on-one support to 30+ students going through emotional distress, and coordinated with the Dean's office when needed.</li>
           <li><strong>Youth Advisory Board Member, Rahat Foundation</strong> (Aug 2025 to Jul 2026). Campus representative guiding mental health programmes for students across India.</li>
         </ul></div>
-        <div class="reveal" style="--d:140ms"><h3>Sport</h3><ul>
+        <div class="reveal" style="--d:140ms"><h3>&#9917; Sport</h3><ul>
           <li><strong>Football club, BITS Pilani Goa.</strong> Represented BITS Goa at Spree, the college sports fest, and played against IIIT Delhi.</li>
         </ul></div>
-        <div class="reveal" style="--d:210ms"><h3>Arts</h3><ul>
+        <div class="reveal" style="--d:210ms"><h3>&#128131; Arts</h3><ul>
           <li><strong>Classical dance.</strong> Trained for six years.</li>
         </ul></div>
       </div>

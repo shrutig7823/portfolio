@@ -167,6 +167,41 @@ section.contact { padding-bottom: var(--s8); }
 
 @media (max-width: 960px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .feature { grid-template-columns: 1fr; padding: var(--s5); } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero.wrap { padding-top: var(--s7); } }
 @media (max-width: 620px) { .eca { grid-template-columns: minmax(0, 1fr); } .skillset { grid-template-columns: 1fr; gap: var(--s2); } .skillset dd { margin-bottom: var(--s3); } .grid, .principles { grid-template-columns: minmax(0, 1fr); } .bar { justify-content: center; } .bar-links { justify-content: center; } .outline { grid-template-columns: 1fr; } .outline dd { margin-bottom: var(--s3); } .segs { border-radius: var(--r-card); } .xp > li { gap: var(--s4); } }
+
+/* character: hero tagline, blobs, three hats, number tiles */
+:root { --tech: #0F766E; --tech-soft: #DDF3EF; --prod: #C2410C; --prod-soft: #FCEBDD; --lead: #6D28D9; --lead-soft: #EDE5FB; }
+.hero.wrap { position: relative; }
+.blob { position: absolute; z-index: -1; border-radius: 50%; filter: blur(60px); opacity: .55; pointer-events: none; animation: drift 14s ease-in-out infinite alternate; }
+.blob.b1 { width: 340px; height: 340px; right: -40px; top: 40px; background: #F9D5BC; }
+.blob.b2 { width: 280px; height: 280px; right: 220px; top: 220px; background: #CFE9E4; animation-duration: 18s; animation-delay: -6s; }
+.tagline { font-family: var(--font-heading); font-size: clamp(26px, 4.4vw, 44px); font-weight: 500; line-height: 1.2; margin: var(--s2) 0 var(--s3); color: #3A1A0A; }
+.rot { color: var(--accent); display: inline-block; transition: opacity .35s ease, transform .35s ease; }
+.rot.out { opacity: 0; transform: translateY(8px); }
+.dot-end { color: var(--accent); }
+#hats { padding-top: var(--s6); }
+.hats { display: grid; gap: var(--s4); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hat { background: var(--surface); border: 1px solid var(--line); border-top: 5px solid var(--c); border-radius: var(--r-card); padding: var(--s5); transition: transform .25s, box-shadow .25s; }
+.hat:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(28, 27, 25, .1); }
+.hat.tech { --c: var(--tech); --cs: var(--tech-soft); }
+.hat.prod { --c: var(--prod); --cs: var(--prod-soft); }
+.hat.lead { --c: var(--lead); --cs: var(--lead-soft); }
+.hat-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--cs); color: var(--c); margin-bottom: var(--s3); transition: transform .3s; }
+.hat:hover .hat-icon { transform: rotate(-8deg) scale(1.08); }
+.hat h3 { margin-bottom: var(--s2); font-size: 22px; }
+.hat p { font-size: 15px; color: #3F3C36; }
+.hat-links { display: flex; flex-wrap: wrap; gap: var(--s2); margin: var(--s3) 0 0; }
+.hat-links a { font-size: 13px; font-weight: 600; text-decoration: none; color: var(--c); background: var(--cs); border-radius: 999px; padding: 3px var(--s3); transition: background .2s, color .2s; }
+.hat-links a:hover { background: var(--c); color: #fff; }
+.nums { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s3); margin: var(--s5) 0; }
+.nums div { background: linear-gradient(160deg, var(--lead-soft), #fff 75%); border: 1px solid #DCCFF6; border-radius: var(--r-card); padding: var(--s4); }
+.nums b { display: block; font-family: var(--font-heading); font-size: 30px; line-height: 1.1; color: var(--lead); }
+.nums span { display: block; font-size: 13px; line-height: 1.35; color: #4A4658; margin-top: 4px; }
+.feature { transition: box-shadow .25s; }
+.feature:hover { box-shadow: 0 14px 34px rgba(28, 27, 25, .08); }
+.xp > li:hover .logo-tile { transform: rotate(-6deg) scale(1.06); }
+.logo-tile { transition: transform .3s; }
+@keyframes drift { to { transform: translate(-30px, 24px) scale(1.12); } }
+@media (max-width: 960px) { .hats { grid-template-columns: minmax(0, 1fr); } .nums { grid-template-columns: repeat(2, minmax(0, 1fr)); } .blob { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }

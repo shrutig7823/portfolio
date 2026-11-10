@@ -14,6 +14,20 @@
     reveals.forEach(function (el) { io.observe(el); });
   } else { reveals.forEach(function (el) { el.classList.add("in"); }); }
 
+  /* Hero tagline: cycles through what I do. */
+  var rot = document.getElementById("rot");
+  if (rot && !reduce) {
+    var words = [];
+    try { words = JSON.parse(rot.getAttribute("data-words")); } catch (e) { words = []; }
+    var wi = 0;
+    if (words.length > 1) {
+      setInterval(function () {
+        rot.classList.add("out");
+        setTimeout(function () { wi = (wi + 1) % words.length; rot.textContent = words[wi]; rot.classList.remove("out"); }, 350);
+      }, 2400);
+    }
+  }
+
   /* Numbers count up once when they scroll into view. */
   var counters = document.querySelectorAll("[data-count]");
   if ("IntersectionObserver" in window && !reduce) {
