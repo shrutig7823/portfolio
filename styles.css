@@ -84,11 +84,6 @@ section.wrap { padding-top: var(--s7); }
 .pill { background: var(--soft); color: #4A463E; border-radius: 999px; padding: 3px var(--s4); font-size: 14px; font-weight: 500; }
 .xp-loc { color: var(--muted); font-size: 14.5px; margin-bottom: var(--s2); }
 .xp-text { color: #3F3C36; font-size: 15.5px; max-width: 70ch; margin: 0; }
-.js .xp.collapsed .xp-extra { display: none; }
-.xp-toggle { display: inline-flex; align-items: center; gap: var(--s3); background: none; border: 0; color: var(--text); font: 500 16px var(--font-body); cursor: pointer; padding: var(--s2) 0; }
-.xp-toggle::before { content: ""; width: 9px; height: 9px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: 0 var(--s2) 4px 4px; transition: transform .2s; }
-.xp-toggle[aria-expanded="true"]::before { transform: rotate(-135deg); margin-bottom: -2px; }
-.xp-toggle:hover { color: var(--accent); }
 .group { margin: var(--s7) 0 var(--s4); font-size: 22px; }
 
 .plain { padding-left: 20px; }

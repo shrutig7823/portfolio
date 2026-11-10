@@ -32,19 +32,6 @@
     counters.forEach(function (el) { el.textContent = "0"; co.observe(el); });
   }
 
-  /* Experience: show the first two roles, expand the rest on request. */
-  var xp = document.getElementById("xp"), xt = document.getElementById("xp-toggle");
-  if (xp && xt) {
-    var extras = xp.querySelectorAll(".xp-extra").length;
-    xp.classList.add("collapsed"); xt.hidden = false;
-    xt.addEventListener("click", function () {
-      var open = xp.classList.toggle("collapsed") === false;
-      xt.setAttribute("aria-expanded", open ? "true" : "false");
-      xt.textContent = open ? "Show fewer" : "Show " + extras + " more experiences";
-      if (open) xp.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
-    });
-  }
-
   /* Highlight the menu link of the section being read. */
   var navLinks = document.querySelectorAll("nav a[data-nav]");
   if ("IntersectionObserver" in window) {

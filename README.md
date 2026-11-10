@@ -4,7 +4,7 @@ A one-page portfolio in plain HTML, CSS and a little JavaScript. No framework an
 
 ## What is on it
 - **Projects:** Homli (deployed) and the aptitude game (in development), each with my role.
-- **Experience:** eight internships as a timeline, with a show-more toggle.
+- **Experience:** eight internships as a timeline.
 - **Case studies, PRDs and assignments:** nine PDFs with a thumbnail and a short summary each.
 - **How I work, internships, education and contact.**
 
@@ -13,7 +13,7 @@ A one-page portfolio in plain HTML, CSS and a little JavaScript. No framework an
 |---|---|
 | `index.html` | The whole page |
 | `styles.css` | The look. Colours, spacing and fonts are tokens at the top |
-| `main.js` | Small touches: scroll reveals, counters, the experience toggle, active menu link |
+| `main.js` | Small touches: scroll reveals, counters, active menu link |
 | `vercel.json` | Security headers and long caching for `assets/` |
 | `assets/decks/` | The nine PDFs |
 | `assets/img/` | A cover thumbnail for each PDF |
