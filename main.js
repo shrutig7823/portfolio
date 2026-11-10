@@ -55,7 +55,7 @@
       if (!b) return;
       var f = b.getAttribute("data-filter"), shown = 0;
       segs.querySelectorAll(".seg").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-selected", on ? "true" : "false"); });
-      cards.forEach(function (c) { var show = f === "all" || c.getAttribute("data-cat") === f; c.hidden = !show; if (show) shown++; });
+      cards.forEach(function (c) { var show = f === "all" || (" " + c.getAttribute("data-cat") + " ").indexOf(" " + f + " ") > -1; c.hidden = !show; if (show) shown++; });
       empties.forEach(function (m) { m.hidden = !(shown === 0 && m.getAttribute("data-empty") === f); });
     });
   }
