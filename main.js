@@ -54,6 +54,6 @@
         if (en.isIntersecting) navLinks.forEach(function (a) { a.classList.toggle("active", a.getAttribute("data-nav") === en.target.id); });
       });
     }, { rootMargin: "-45% 0px -50% 0px" });
-    ["projects", "experience", "case-studies", "how", "contact"].forEach(function (id) { var s = document.getElementById(id); if (s) no.observe(s); });
+    ["how", "projects", "experience", "case-studies", "extracurricular", "contact"].forEach(function (id) { var s = document.getElementById(id); if (s) no.observe(s); });
   }
 })();

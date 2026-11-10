@@ -134,6 +134,11 @@ section.wrap { padding-top: var(--s7); }
 .card-link a { text-decoration: none; }
 .card-link a:hover { text-decoration: underline; }
 
+.eca { display: grid; gap: var(--s4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.eca > div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: var(--s5); }
+.eca h3 { margin-bottom: var(--s3); }
+.eca ul { margin: 0; padding-left: 18px; font-size: 15px; }
+.eca li { margin-bottom: var(--s3); }
 .principles { display: grid; gap: var(--s4); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .principles > div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: var(--s5); }
 .principles h3 { margin-bottom: var(--s2); }
@@ -146,7 +151,7 @@ section.contact { padding-bottom: var(--s8); }
 .js .reveal.in { opacity: 1; transform: none; }
 
 @media (max-width: 960px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .feature { grid-template-columns: 1fr; padding: var(--s5); } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hero.wrap { padding-top: var(--s7); } }
-@media (max-width: 620px) { .skillset { grid-template-columns: 1fr; gap: var(--s2); } .skillset dd { margin-bottom: var(--s3); } .grid, .principles { grid-template-columns: minmax(0, 1fr); } .bar { justify-content: center; } .bar-links { justify-content: center; } .outline { grid-template-columns: 1fr; } .outline dd { margin-bottom: var(--s3); } .segs { border-radius: var(--r-card); } .xp li { gap: var(--s4); } }
+@media (max-width: 620px) { .eca { grid-template-columns: minmax(0, 1fr); } .skillset { grid-template-columns: 1fr; gap: var(--s2); } .skillset dd { margin-bottom: var(--s3); } .grid, .principles { grid-template-columns: minmax(0, 1fr); } .bar { justify-content: center; } .bar-links { justify-content: center; } .outline { grid-template-columns: 1fr; } .outline dd { margin-bottom: var(--s3); } .segs { border-radius: var(--r-card); } .xp li { gap: var(--s4); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
