@@ -82,6 +82,7 @@ section.wrap { padding-top: var(--s7); }
 .xp-body { flex: 1; min-width: 0; }
 .xp-body h3 { font-size: 21px; }
 .xp-co { font-size: 17px; margin: 2px 0 var(--s2); }
+.xp-about { color: var(--muted); font-size: 14.5px; font-style: italic; margin: 0 0 var(--s2); max-width: 70ch; }
 .xp-dates { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s3); color: var(--muted); font-size: 15px; margin-bottom: var(--s2); }
 .pill { background: var(--soft); color: #4A463E; border-radius: 999px; padding: 3px var(--s4); font-size: 14px; font-weight: 500; }
 .xp-loc { color: var(--muted); font-size: 14.5px; margin-bottom: var(--s2); }
