@@ -1,0 +1,288 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>SIP Change Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: explainer + simulation controls on the left, one phone running the flow on the right.
+   Page chrome is themed; the phone screen is a fixed light app UI that follows the real SIP screens. */
+:root {
+  --bg: #F4F6FB; --surface: #FFFFFF; --ink: #14213D; --muted: #566277; --line: #DAE0EC; --accent: #3F58D4; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF4DC; --warn-ink: #8A5A00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1526; --surface: #172036; --ink: #E8ECF6; --muted: #A3AEC6; --line: #27334D; --accent: #8FA3FF; --accent-ink: #0E1526;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E1526; --surface: #172036; --ink: #E8ECF6; --muted: #A3AEC6; --line: #27334D; --accent: #8FA3FF; --accent-ink: #0E1526;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 46ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.ctl { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; }
+.ctl input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn:focus-visible, .btn:focus-visible, .key:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pbtn.solid { background: var(--accent); color: var(--accent-ink); }
+.pbtn:disabled { opacity: .4; cursor: not-allowed; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #0B1220; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(10,20,50,.28); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #1B2333; }
+.status { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.hdr { display: flex; align-items: center; gap: 14px; padding: 10px 16px 12px; font-size: 18px; font-weight: 500; flex: none; background: #fff; }
+.hdr button { background: none; border: 0; padding: 4px; cursor: pointer; color: #1B2333; display: grid; }
+.scroll { flex: 1; overflow-y: auto; background: #F2F4F9; }
+.sec { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+.sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+.fund { display: flex; gap: 12px; align-items: center; }
+.logo { width: 40px; height: 40px; border-radius: 50%; background: #FDE7E4; display: grid; place-items: center; color: #D2402C; font-weight: 700; flex: none; }
+.fund small { color: #6B7587; font-size: 11px; }
+.fund b { display: block; font-size: 15px; font-weight: 500; }
+.fund .meta { font-size: 12px; color: #6B7587; }
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; font-size: 15px; font-weight: 500; }
+.banner.amber { background: #FDF1DC; } .banner.green { background: #DDF3EA; }
+.banner small { display: block; font-weight: 400; font-size: 12.5px; color: #4B566A; margin-top: 2px; line-height: 1.35; }
+.kv { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; gap: 12px; }
+.kv span:first-child { color: #6B7587; }
+.kv b { font-weight: 500; text-align: right; }
+.inst { border: 1px solid #E3E7F0; border-radius: 10px; padding: 11px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.inst b { font-size: 16px; font-weight: 500; display: block; }
+.inst small { font-size: 12px; color: #6B7587; }
+.pill { font-size: 11.5px; font-weight: 500; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.amber { background: #FDF1DC; color: #8A5A00; } .pill.blue { background: #E4E9FB; color: #3047B8; } .pill.green { background: #DDF3EA; color: #0A7A5A; }
+.stepper { display: grid; gap: 0; margin-top: 4px; }
+.st { display: flex; gap: 12px; font-size: 13.5px; position: relative; padding-bottom: 14px; }
+.st:last-child { padding-bottom: 0; }
+.st i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #C7CEDD; background: #fff; flex: none; display: grid; place-items: center; z-index: 1; }
+.st:not(:last-child)::before { content: ""; position: absolute; left: 8px; top: 18px; bottom: 0; width: 2px; background: #DDE2EE; }
+.st.done i { background: #0B9A75; border-color: #0B9A75; } .st.now i { border-color: #3F58D4; }
+.st.now i::after { content: ""; width: 6px; height: 6px; background: #3F58D4; border-radius: 50%; }
+.st small { display: block; color: #6B7587; font-size: 12px; }
+.warnbox { background: #FDF1DC; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.4; margin-top: 10px; }
+.infobox { background: #EEF1FC; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.4; display: flex; gap: 8px; }
+.foot { padding: 12px 16px 16px; background: #fff; border-top: 1px solid #E8ECF4; display: grid; gap: 10px; flex: none; }
+.btn { font: 500 15px var(--font-app); letter-spacing: .04em; text-transform: uppercase; width: 100%; padding: 14px; border-radius: 8px; border: 1.5px solid #3F58D4; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.primary { background: #3F58D4; color: #fff; } .btn.outline { background: #fff; color: #3F58D4; }
+.btn:disabled { background: #E8ECF4; border-color: #E8ECF4; color: #8D96A8; cursor: not-allowed; }
+.amt { text-align: center; padding: 14px 16px 6px; background: #fff; }
+.amt label { font-size: 14px; color: #4B566A; }
+.field { margin: 8px 0 0; border: 1.5px solid #3F58D4; border-radius: 6px; padding: 12px; font-size: 30px; font-weight: 500; position: relative; }
+.field.err { border-color: #D2402C; }
+.field.empty { color: #B3BAC9; }
+.strip { background: #DDF3EA; color: #1B2333; font-size: 13px; padding: 6px; border-radius: 0 0 6px 6px; margin: 0 0 0; }
+.strip u { text-decoration-style: dashed; color: #0A7A5A; font-weight: 500; }
+.errtxt { color: #D2402C; font-size: 13px; padding-top: 6px; }
+.chips { display: flex; gap: 12px; justify-content: center; padding: 14px 0 10px; background: #fff; }
+.chip { border: 1px solid #DDE2EE; border-radius: 999px; padding: 7px 18px; font-size: 14px; color: #3F58D4; background: #fff; cursor: pointer; font-family: var(--font-app); }
+.dd { display: flex; gap: 12px; justify-content: center; padding: 0 16px 14px; background: #fff; }
+.dd span { border: 1px solid #DDE2EE; border-radius: 999px; padding: 7px 14px; font-size: 13.5px; color: #3F58D4; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border-top: 1px solid #E8ECF4; flex: none; }
+.key { height: 50px; font: 400 22px var(--font-app); background: #fff; border: 0; border-right: 1px solid #E8ECF4; border-bottom: 1px solid #E8ECF4; cursor: pointer; color: #1B2333; }
+.key:nth-child(3n) { border-right: 0; }
+.seg { display: flex; background: #EEF1F8; border-radius: 8px; padding: 3px; gap: 3px; margin-bottom: 12px; }
+.seg button { flex: 1; border: 0; background: transparent; padding: 7px; border-radius: 6px; font: 500 13px var(--font-app); color: #566277; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: #fff; color: #3F58D4; box-shadow: 0 1px 3px rgba(20,33,61,.15); }
+.big { text-align: center; padding: 6px 0 4px; }
+.big .from { font-size: 20px; color: #8D96A8; text-decoration: line-through; }
+.big .to { font-size: 34px; font-weight: 500; }
+.big .arrow { margin: 0 10px; color: #8D96A8; }
+.delta { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: 999px; background: #EEF1F8; color: #3A4660; }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cmp div { border: 1px solid #E3E7F0; border-radius: 10px; padding: 10px 12px; }
+.cmp small { color: #6B7587; font-size: 12px; display: block; }
+.cmp b { font-size: 19px; font-weight: 500; }
+.diff { margin-top: 10px; padding: 10px 12px; border-radius: 10px; font-size: 14px; background: #EEF1F8; line-height: 1.4; }
+.diff.up { background: #DDF3EA; }
+.fine { font-size: 11.5px; color: #6B7587; line-height: 1.4; margin-top: 8px; }
+.success { position: absolute; inset: 0; background: #0B9A75; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; gap: 10px; cursor: pointer; z-index: 3; }
+.success h2 { margin: 6px 0 0; font-size: 22px; font-weight: 500; }
+.success p { margin: 0; font-size: 15px; line-height: 1.45; opacity: .95; }
+.success small { margin-top: 16px; opacity: .75; font-size: 12px; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 90px; background: #1B2333; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 4; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } }
+</style>
+
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Angel One · Mutual funds</div>
+      <h1>SIP Change Review</h1>
+      <p class="lede">Change the monthly amount of a SIP and see what it means before you confirm. The flow keeps the existing SIP screens and adds one review step and a clear status after.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Simulation · no payment is made</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <label class="ctl" for="queued"><input type="checkbox" id="queued"><span>Simulate a payment already queued under the old amount</span></label>
+      <div class="row">
+        <button class="pbtn solid" id="advance" type="button">Finish processing</button>
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Try an increase (for example ₹1,000) and a decrease (₹100). The minimum is ₹100, as seen on the fund in the walkthrough. Fund name, dates and amounts are simulated. The estimate assumes 8% a year, constant, and is not a forecast.</p>
+    </div>
+  </section>
+  <div class="phone" aria-label="Simulated Angel One app screen"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  var I = Math.pow(1.08, 1 / 12) - 1;
+  function fv(p, y) { var n = 12 * y; return p * ((Math.pow(1 + I, n) - 1) / I); }
+  function inr(n) { return "₹" + Math.round(n).toLocaleString("en-IN"); }
+  var MIN = 100, S;
+  function fresh() { return { screen: "details", current: 500, input: "500", yrs: 10, stage: "none", queued: false, toast: "" }; }
+  S = fresh();
+  var timer = null, lastScreen = '';
+
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>',
+    pen: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+    warn: '<svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#F5A623"/><path d="M12 7v6M12 16.5v.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
+    ok: '<svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0B9A75"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+    info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F58D4" stroke-width="2" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+    bigok: '<svg width="64" height="64" viewBox="0 0 24 24"><path d="M12 1.5l2.3 1.6 2.8-.2 1.2 2.5 2.5 1.2-.2 2.8L22.2 12l-1.6 2.3.2 2.8-2.5 1.2-1.2 2.5-2.8-.2L12 22.2l-2.3-1.6-2.8.2-1.2-2.5-2.5-1.2.2-2.8L1.8 12l1.6-2.3-.2-2.8 2.5-1.2 1.2-2.5 2.8.2z" fill="#fff"/><path d="M8 12.2l2.8 2.8 5.2-5.6" stroke="#0B9A75" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>'
+  };
+  function status() { return '<div class="status"><span>4:20</span><span>5G ▮▮▮ 72</span></div>'; }
+  function hdr(t, back) { return '<div class="hdr">' + (back ? '<button data-act="' + back + '" aria-label="Back">' + ic.back + '</button>' : "") + '<span>' + t + '</span></div>'; }
+  function fundCard(amt) {
+    return '<div class="sec"><div class="fund"><div class="logo">B</div><div><small>Direct • Growth</small><b>Bandhan Small Cap Fund</b><span class="meta">Monthly | ' + inr(amt) + ' | 4th of every month</span></div></div></div>';
+  }
+  function autopay() { return '<div class="sec"><h3>AutoPay Details</h3><div class="kv"><span>Bank</span><b>UNION BANK OF INDIA ••••9165</b></div></div>'; }
+  function newAmt() { var v = parseInt(S.input || "0", 10); return isNaN(v) ? 0 : v; }
+
+  function details() {
+    return status() + '<div class="view">' + hdr("SIP Details", "") +
+      '<div class="scroll">' + fundCard(S.current) +
+      '<div class="sec"><h3>Next instalment</h3><div class="kv"><span>Due date</span><b>04 Dec 2026</b></div><div class="kv"><span>Amount</span><b>' + inr(S.current) + '</b></div></div>' +
+      autopay() +
+      '<div class="sec"><h3>Instalment History</h3><div class="kv"><span>Created on</span><b>13 Nov 2026</b></div>' +
+      (S.stage === "done" ? '<div class="kv"><span>SIP edited</span><b>' + inr(S.prev) + ' → ' + inr(S.current) + '</b></div>' : '') + '</div></div>' +
+      '<div class="foot"><button class="btn outline" data-act="edit">' + ic.pen + ' Change amount/date</button></div></div>';
+  }
+  function edit() {
+    var v = newAmt(), bad = S.input !== "" && v < MIN, empty = S.input === "";
+    var same = v === S.current;
+    var strip = (!bad && !empty) ? '<div class="strip">↗ 3Y potential value: <u>' + inr(fv(v, 3)) + '</u> <span style="color:#6B7587">(at 8%, illustrative)</span></div>' : "";
+    var keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map(function (k) {
+      return k === "" ? '<span class="key" style="cursor:default"></span>' : '<button class="key" data-key="' + k + '" aria-label="' + (k === "⌫" ? "Delete" : k) + '">' + k + '</button>';
+    }).join("");
+    return status() + '<div class="view">' + '<div class="hdr"><button data-act="details" aria-label="Back">' + ic.back + '</button><div class="fund" style="gap:10px"><div class="logo" style="width:32px;height:32px;font-size:14px">B</div><div><b style="font-size:14px">Bandhan Small Cap Fund</b><small>Direct • Growth</small></div></div></div>' +
+      '<div class="scroll" style="background:#fff"><div class="amt"><label>Monthly SIP Amount</label><div class="field ' + (bad ? "err" : "") + (empty ? " empty" : "") + '">' + (empty ? "₹0" : "₹" + v.toLocaleString("en-IN")) + '</div>' + strip + (bad ? '<div class="errtxt">Minimum SIP amount is ₹100</div>' : "") + '</div>' +
+      '<div class="chips"><button class="chip" data-add="100">+ ₹100</button><button class="chip" data-add="500">+ ₹500</button><button class="chip" data-add="1000">+ ₹1,000</button></div>' +
+      '<div class="dd"><span>Monthly SIP ▾</span><span>4th of every month ▾</span></div></div>' +
+      '<div class="foot" style="border-top:0;padding-top:6px"><button class="btn primary" data-act="review" ' + ((bad || empty || same) ? "disabled" : "") + '>' + (same ? "Enter a new amount" : "Review change") + '</button></div>' +
+      '<div class="keypad">' + keys + '</div></div>';
+  }
+  function review() {
+    var v = newAmt(), c = S.current, d = v - c, up = d > 0, y = S.yrs;
+    var a = fv(c, y), b = fv(v, y), gap = Math.abs(b - a);
+    var seg = [3, 5, 10].map(function (n) { return '<button data-yrs="' + n + '" aria-pressed="' + (S.yrs === n) + '">' + n + ' years</button>'; }).join("");
+    return status() + '<div class="view">' + hdr("Review SIP change", "edit") +
+      '<div class="scroll"><div class="sec"><div class="fund" style="margin-bottom:6px"><div class="logo">B</div><div><b>Bandhan Small Cap Fund</b><span class="meta">Monthly SIP · 4th of every month</span></div></div>' +
+      '<div class="big"><span class="from">' + inr(c) + '</span><span class="arrow">→</span><span class="to">' + inr(v) + '</span><div><span class="delta">' + (up ? inr(d) + ' more' : inr(-d) + ' less') + ' each month</span></div></div></div>' +
+      '<div class="sec"><h3>What this means over time</h3><div class="seg" role="group" aria-label="Time horizon">' + seg + '</div>' +
+      '<div class="cmp"><div><small>Current plan</small><b>' + inr(a) + '</b></div><div><small>New plan</small><b>' + inr(b) + '</b></div></div>' +
+      '<div class="diff ' + (up ? "up" : "") + '">' + (up ? 'About <b>' + inr(gap) + ' more</b> estimated value after ' + y + ' years.' : 'About <b>' + inr(gap) + ' less</b> estimated value after ' + y + ' years. Your monthly budget gets ' + inr(-d) + ' of room.') + '</div>' +
+      '<div class="fine">Illustrative: 8% a year, constant, future instalments only. Excludes charges, taxes and inflation. Not guaranteed.</div></div>' +
+      '<div class="sec"><h3>When it applies</h3><div class="kv"><span>Next debit</span><b>' + (S.queued ? inr(c) + ' on 04 Dec 2026' : inr(v) + ' on 04 Dec 2026') + '</b></div>' + (S.queued ? '<div class="kv"><span>From 04 Jan 2027</span><b>' + inr(v) + '</b></div>' : "") +
+      '<div class="infobox">' + ic.info + '<span>Changing future payments does not withdraw or reduce the units you already own.</span></div>' + (S.queued ? '<div class="warnbox">A ' + inr(c) + ' payment is already queued for 04 Dec 2026 and will still be debited.</div>' : "") + '</div></div>' +
+      '<div class="foot"><button class="btn primary" data-act="confirm">Confirm change</button><button class="btn outline" data-act="keep">Keep current amount</button></div></div>';
+  }
+  function pending() {
+    var v = newAmt(), c = S.current;
+    var nd = S.queued ? inr(c) : inr(v);
+    return status() + '<div class="view">' + hdr("SIP Details", "") + '<div class="scroll">' +
+      '<div class="banner amber">' + ic.warn + '<div>Change in progress<small>Your request is being processed. ' + inr(v) + ' a month applies from 04 Dec 2026.</small></div></div>' + fundCard(v) +
+      '<div class="sec"><h3>Your instructions</h3>' +
+      '<div class="inst"><div><b>' + inr(c) + ' / month</b><small>Current instruction</small></div><span class="pill amber">Being replaced</span></div>' +
+      '<div class="inst"><div><b>' + inr(v) + ' / month</b><small>New instruction</small></div><span class="pill blue">Processing</span></div>' +
+      '<div class="fine" style="margin:0">Counted as one SIP of ' + inr(v) + ' once the change completes.</div></div>' +
+      '<div class="sec"><h3>Progress</h3><div class="stepper">' +
+      '<div class="st done"><i></i><div>Change requested<small>13 Nov 2026</small></div></div>' +
+      '<div class="st now"><i></i><div>Processing<small>Updating your AutoPay instruction</small></div></div>' +
+      '<div class="st"><i></i><div>Active from 04 Dec 2026<small>First debit of the new amount</small></div></div></div></div>' +
+      '<div class="sec"><h3>Next debit</h3><div class="kv"><span>04 Dec 2026</span><b>' + nd + '</b></div>' +
+      (S.queued ? '<div class="warnbox">This ' + inr(c) + ' payment was queued before your change and will still be debited. ' + inr(v) + ' starts 04 Jan 2027.</div>' : "") + '</div>' +
+      '<div class="sec"><h3>Your investment</h3><div class="fine" style="margin:0;font-size:13px">Units you already own stay invested and are not changed by this edit.</div></div>' + autopay() + '</div>' +
+      '<div class="foot"><button class="btn outline" disabled>Change amount/date</button><div class="fine" style="text-align:center;margin:0">Available when the change completes.</div></div></div>';
+  }
+  function done() {
+    var v = S.current, p = S.prev;
+    return status() + '<div class="view">' + hdr("SIP Details", "") + '<div class="scroll">' +
+      '<div class="banner green">' + ic.ok + '<div>Change completed<small>Your SIP is now ' + inr(v) + ' a month.</small></div></div>' + fundCard(v) +
+      '<div class="sec"><h3>Your instruction</h3><div class="inst"><div><b>' + inr(v) + ' / month</b><small>One active SIP</small></div><span class="pill green">Active</span></div></div>' +
+      '<div class="sec"><h3>Next debit</h3>' + (S.queued ? '<div class="kv"><span>04 Dec 2026</span><b>' + inr(p) + '</b></div><div class="kv"><span>From 04 Jan 2027</span><b>' + inr(v) + '</b></div><div class="fine" style="margin:0">The ' + inr(p) + ' payment was queued before the change.</div>' : '<div class="kv"><span>04 Dec 2026</span><b>' + inr(v) + '</b></div>') + '</div>' +
+      '<div class="sec"><h3>Instalment History</h3><div class="kv"><span>Created on</span><b>13 Nov 2026</b></div><div class="kv"><span>SIP edited</span><b>' + inr(p) + ' → ' + inr(v) + '</b></div><div class="kv"><span>Edited on</span><b>13 Nov 2026</b></div></div>' +
+      '<div class="sec"><h3>Your investment</h3><div class="fine" style="margin:0;font-size:13px">Units you already own were not changed by this edit.</div></div>' + autopay() + '</div>' +
+      '<div class="foot"><button class="btn outline" data-act="edit">' + ic.pen + ' Change amount/date</button></div></div>';
+  }
+  function success() {
+    return '<div class="success" data-act="topending" role="button" tabindex="0">' + ic.bigok + '<h2>Change requested</h2><p>Your next SIP payment is ' + (S.queued ? inr(S.current) : inr(newAmt())) + ' on 04 Dec 2026</p><small>Tap to continue</small></div>';
+  }
+
+  var order = ["details", "edit", "review", "pending", "done"];
+  var labels = { details: "Open the SIP", edit: "Edit the amount", review: "Review the change", pending: "Pending status", done: "Confirmed status" };
+  function steps() {
+    var cur = S.screen === "success" ? "pending" : S.screen, idx = order.indexOf(cur);
+    document.getElementById("steps").innerHTML = order.map(function (k, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"><b>' + (i + 1) + '</b>' + labels[k] + '</li>';
+    }).join("");
+    document.getElementById("advance").disabled = !(S.screen === "pending");
+  }
+  function render() {
+    var f = { details: details, edit: edit, review: review, pending: pending, done: done, success: function () { return pending() + success(); } }[S.screen];
+    var el = document.getElementById("app");
+    var html = f() + (S.toast ? '<div class="toast" role="status">' + S.toast + '</div>' : "");
+    el.innerHTML = html; if (S.screen !== lastScreen) { var vw = el.querySelector('.view'); if (vw) vw.classList.add('enter'); lastScreen = S.screen; } steps();
+  }
+  function go(s) { S.screen = s; S.toast = ""; render(); }
+
+  document.getElementById("app").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-key],[data-add],[data-yrs]"); if (!t) return;
+    if (t.dataset.key) {
+      var k = t.dataset.key;
+      if (k === "⌫") S.input = S.input.slice(0, -1); else if (S.input.length < 6) S.input = (S.input === "0" ? "" : S.input) + k;
+      return render();
+    }
+    if (t.dataset.add) { S.input = String((S.input === "" ? 0 : newAmt()) + parseInt(t.dataset.add, 10)); return render(); }
+    if (t.dataset.yrs) { S.yrs = parseInt(t.dataset.yrs, 10); return render(); }
+    var a = t.dataset.act;
+    if (a === "edit") { S.input = String(S.current); return go("edit"); }
+    if (a === "details") return go("details");
+    if (a === "review") return go("review");
+    if (a === "keep") { S.input = String(S.current); S.toast = "No change made. Your SIP stays at " + inr(S.current) + "."; go("details"); setTimeout(function () { S.toast = ""; if (S.screen === "details") render(); }, 2600); return; }
+    if (a === "confirm") { S.stage = "pending"; go("success"); clearTimeout(timer); timer = setTimeout(function () { if (S.screen === "success") go("pending"); }, 2600); return; }
+    if (a === "topending") { clearTimeout(timer); return go("pending"); }
+  });
+  document.getElementById("app").addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target.dataset.act === "topending") { e.preventDefault(); e.target.click(); } });
+  document.getElementById("queued").addEventListener("change", function (e) { S.queued = e.target.checked; render(); });
+  document.getElementById("advance").addEventListener("click", function () {
+    if (S.screen !== "pending") return;
+    S.prev = S.current; S.current = newAmt(); S.stage = "done"; go("done");
+  });
+  document.getElementById("reset").addEventListener("click", function () {
+    clearTimeout(timer); var q = S.queued; S = fresh(); S.queued = q; render();
+  });
+  render();
+})();
+</script>
+
+</body></html>

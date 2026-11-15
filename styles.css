@@ -183,7 +183,9 @@ section.wrap { padding-top: var(--s7); }
 .hint { color: var(--muted); font-size: 13.5px; }
 .card.wide .stages { animation: stagesIn .5s ease both; }
 @keyframes stagesIn { from { opacity: 0; transform: translateX(-16px); } }
-.card-link { margin: auto 0 0; padding-top: var(--s4); font-size: 14.5px; font-weight: 600; }
+.card-link { margin: auto 0 0; padding-top: var(--s4); font-size: 14.5px; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
+.card-link a.proto { background: var(--accent); color: #fff; padding: 6px 12px; border-radius: 999px; font-size: 13px; white-space: nowrap; transition: background .2s, transform .2s; }
+.card-link a.proto:hover { background: #A8360A; text-decoration: none; transform: translateY(-1px); }
 .card-link a { text-decoration: none; }
 .card-link a:hover { text-decoration: underline; }
 
