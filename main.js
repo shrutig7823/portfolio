@@ -143,3 +143,15 @@ document.addEventListener("mouseover", function (e) {
   }
   if ("IntersectionObserver" in window) { new IntersectionObserver(function (en, o) { if (en[0].isIntersecting) { o.disconnect(); start(); } }, { threshold: 0.35 }).observe(jr); } else { start(); }
 })();
+
+/* journey: hide the tip once someone uses it; the train's label says where it is */
+(function () {
+  var jr = document.getElementById("journey"); if (!jr) return;
+  var tip = document.getElementById("jtip"), here = jr.querySelector(".here"), stops = [].slice.call(jr.querySelectorAll(".stop"));
+  jr.addEventListener("click", function (e) {
+    var s = e.target.closest(".stop"); if (!s) return;
+    if (tip) tip.classList.add("off");
+    if (here) here.textContent = s.classList.contains("now") ? "You are here" : s.querySelector(".sname").textContent;
+  });
+  setTimeout(function () { if (here && !jr.querySelector(".stop.active.now")) return; }, 0);
+})();
