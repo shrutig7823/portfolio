@@ -102,3 +102,44 @@ document.addEventListener("mouseover", function (e) {
   var c = e.target.closest && e.target.closest(".has-peek"); if (!c) return;
   var f = c.querySelector("iframe[data-src]"); if (f) { f.src = f.getAttribute("data-src"); f.removeAttribute("data-src"); }
 });
+
+/* Experience journey: the train rides from the first stop to where I am now, then parks there. Tap a stop to go there. */
+(function () {
+  var jr = document.getElementById("journey"); if (!jr) return;
+  var stops = [].slice.call(jr.querySelectorAll(".stop")), items = [].slice.call(jr.querySelectorAll(".jitem"));
+  var train = document.getElementById("train"), lit = document.getElementById("lit"), rail = jr.querySelector(".rail"), scroller = jr.querySelector(".jscroll");
+  var n = stops.length, last = n - 1, cur = 0, raf = 0, started = false;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var pos = function (i) { return i / last; };
+  function paint(p) {                                   // p is 0 to 1 along the rail
+    train.style.left = (p * 100) + "%"; lit.style.width = (p * 100) + "%";
+    stops.forEach(function (s, i) { s.classList.toggle("passed", pos(i) <= p + 0.001); });
+  }
+  function show(i) {
+    items.forEach(function (it, k) { if (k === i) it.removeAttribute("data-off"); else it.setAttribute("data-off", ""); });
+    stops.forEach(function (s, k) { s.classList.toggle("active", k === i); });
+  }
+  function centre(i) {
+    var s = stops[i]; if (scroller.scrollWidth > scroller.clientWidth) scroller.scrollTo({ left: s.offsetLeft + rail.offsetLeft - scroller.clientWidth / 2, behavior: reduce ? "auto" : "smooth" });
+  }
+  function travel(from, to, ms, done) {
+    clearTimeout(raf); train.classList.remove("parked");
+    if (reduce || from === to) { paint(to); train.classList.add("parked"); if (done) done(); return; }
+    var t0 = performance.now();
+    (function step(now) {
+      var k = Math.min(1, (now - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      paint(from + (to - from) * e);
+      if (k < 1) raf = setTimeout(function () { step(performance.now()); }, 16); else { train.classList.add("parked"); if (done) done(); }
+    })(t0);
+  }
+  function go(i) { var from = parseFloat(train.style.left) / 100 || 0; cur = i; show(i); centre(i); travel(from, pos(i), 700 + Math.abs(pos(i) - from) * 1400); }
+  stops.forEach(function (s, i) { s.addEventListener("click", function () { go(i); }); });
+  show(last); paint(0);                                  // the panel shows where I am now; the train starts at the beginning
+  function start() {
+    if (started) return; started = true;
+    scroller.scrollLeft = 0;
+    travel(0, 1, 4200, function () { cur = last; centre(last); });
+    if (!reduce) { var f = function () { var p = parseFloat(train.style.left) / 100 || 0; if (p < 1) { var sc = scroller; if (sc.scrollWidth > sc.clientWidth) sc.scrollLeft = Math.max(0, p * rail.offsetWidth - sc.clientWidth / 2 + 44); setTimeout(f, 60); } }; setTimeout(f, 60); }
+  }
+  if ("IntersectionObserver" in window) { new IntersectionObserver(function (en, o) { if (en[0].isIntersecting) { o.disconnect(); start(); } }, { threshold: 0.35 }).observe(jr); } else { start(); }
+})();
