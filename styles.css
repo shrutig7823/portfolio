@@ -356,7 +356,7 @@ section.contact { padding-bottom: var(--s8); }
 .rail { position: relative; min-width: 860px; height: 120px; margin: 0 44px; }
 .track { position: absolute; left: 0; right: 0; top: 44px; height: 8px; }
 .track .line { position: absolute; inset: 0; border-radius: 4px; background: repeating-linear-gradient(90deg, #C9C2B2 0 10px, transparent 10px 16px), linear-gradient(#DDD6C6, #DDD6C6); background-size: auto, 100% 2px; background-position: 0 0, 0 3px; background-repeat: repeat-x, no-repeat; }
-.track .lit { position: absolute; left: 0; top: 2px; height: 4px; width: 0; border-radius: 2px; background: var(--accent); }
+.track .lit { position: absolute; right: 0; top: 2px; height: 4px; width: 0; border-radius: 2px; background: var(--accent); }
 .stop { position: absolute; left: var(--x); top: 30px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: 0; padding: 0; cursor: pointer; width: 92px; font: inherit; color: var(--text); }
 .stop .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 4px solid #C9C2B2; transition: border-color .3s, background .3s, transform .2s; z-index: 2; }
 .stop.passed .dot { border-color: var(--c); }
@@ -393,7 +393,7 @@ section.contact { padding-bottom: var(--s8); }
 @media (prefers-reduced-motion: reduce) { .train svg, .jitem { animation: none; } }
 
 /* journey tooltip and the full list */
-.jtip { position: absolute; left: 14.3%; top: -44px; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 13px; line-height: 1.3; padding: 7px 12px; border-radius: 10px; white-space: nowrap; box-shadow: 0 8px 20px rgba(194, 65, 12, .3); z-index: 4; animation: tipbob 1.6s ease-in-out infinite alternate; transition: opacity .3s; }
+.jtip { position: absolute; left: 30%; top: -44px; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 13px; line-height: 1.3; padding: 7px 12px; border-radius: 10px; white-space: nowrap; box-shadow: 0 8px 20px rgba(194, 65, 12, .3); z-index: 4; animation: tipbob 1.6s ease-in-out infinite alternate; transition: opacity .3s; }
 .jtip::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; background: var(--accent); transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
 .jtip.off { opacity: 0; pointer-events: none; }
 @keyframes tipbob { to { transform: translateX(-50%) translateY(-4px); } }
@@ -418,7 +418,7 @@ section.contact { padding-bottom: var(--s8); }
 .xs-co p, .xs-role { margin: 0; }
 .xpfull-body { padding: 0 var(--s4) var(--s4); }
 .xpfull-body .xp-about { margin-top: 0; }
-@media (max-width: 620px) { .jtip { left: 30%; } }
+@media (max-width: 620px) { .jtip { left: 38%; } }
 
 html, body { overflow-x: clip; }
 
@@ -432,3 +432,5 @@ html, body { overflow-x: clip; }
 .casebox .feature { margin: 0; box-shadow: none; }
 body.case-open { overflow: hidden; }
 @media (max-width: 620px) { .casebox { padding: 0; } .casebox-card { border-radius: 0; min-height: 100%; padding: var(--s3); } }
+
+.train svg { scale: -1 1; }

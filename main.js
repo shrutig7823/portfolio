@@ -111,8 +111,9 @@ document.addEventListener("mouseover", function (e) {
   var n = stops.length, last = n - 1, cur = 0, raf = 0, started = false;
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var pos = function (i) { return i / last; };
+  var curP = function () { var l = parseFloat(train.style.left); return isNaN(l) ? 0 : 1 - l / 100; };
   function paint(p) {                                   // p is 0 to 1 along the rail
-    train.style.left = (p * 100) + "%"; lit.style.width = (p * 100) + "%";
+    train.style.left = ((1 - p) * 100) + "%"; lit.style.width = (p * 100) + "%";
     stops.forEach(function (s, i) { s.classList.toggle("passed", pos(i) <= p + 0.001); });
   }
   function show(i) {
@@ -132,14 +133,14 @@ document.addEventListener("mouseover", function (e) {
       if (k < 1) raf = setTimeout(function () { step(performance.now()); }, 16); else { train.classList.add("parked"); if (done) done(); }
     })(t0);
   }
-  function go(i) { var from = parseFloat(train.style.left) / 100 || 0; cur = i; show(i); centre(i); travel(from, pos(i), 700 + Math.abs(pos(i) - from) * 1400); }
+  function go(i) { var from = curP(); cur = i; show(i); centre(i); travel(from, pos(i), 700 + Math.abs(pos(i) - from) * 1400); }
   stops.forEach(function (s, i) { s.addEventListener("click", function () { go(i); }); });
   show(last); paint(0);                                  // the panel shows where I am now; the train starts at the beginning
   function start() {
     if (started) return; started = true;
-    scroller.scrollLeft = 0;
+    scroller.scrollLeft = scroller.scrollWidth;
     travel(0, 1, 4200, function () { cur = last; centre(last); });
-    if (!reduce) { var f = function () { var p = parseFloat(train.style.left) / 100 || 0; if (p < 1) { var sc = scroller; if (sc.scrollWidth > sc.clientWidth) sc.scrollLeft = Math.max(0, p * rail.offsetWidth - sc.clientWidth / 2 + 44); setTimeout(f, 60); } }; setTimeout(f, 60); }
+    if (!reduce) { var f = function () { var p = curP(); if (p < 1) { var sc = scroller; if (sc.scrollWidth > sc.clientWidth) sc.scrollLeft = Math.max(0, (1 - p) * rail.offsetWidth - sc.clientWidth / 2 + 44); setTimeout(f, 60); } }; setTimeout(f, 60); }
   }
   if ("IntersectionObserver" in window) { new IntersectionObserver(function (en, o) { if (en[0].isIntersecting) { o.disconnect(); start(); } }, { threshold: 0.35 }).observe(jr); } else { start(); }
 })();
