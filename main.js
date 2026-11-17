@@ -82,3 +82,17 @@
     ["how", "projects", "experience", "case-studies", "skills", "extracurricular", "contact"].forEach(function (id) { var s = document.getElementById(id); if (s) no.observe(s); });
   }
 })();
+
+/* Project cards open their full case in place. */
+(function () {
+  function openCase(id, scroll) {
+    var d = document.getElementById(id);
+    if (d && d.tagName === "DETAILS") { d.open = true; if (scroll) d.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-open]");
+    if (a) { e.preventDefault(); openCase(a.getAttribute("data-open"), true); }
+  });
+  window.addEventListener("hashchange", function () { openCase(location.hash.slice(1), false); });
+  if (location.hash) openCase(location.hash.slice(1), false);
+})();
