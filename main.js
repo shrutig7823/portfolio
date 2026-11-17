@@ -96,3 +96,9 @@
   window.addEventListener("hashchange", function () { openCase(location.hash.slice(1), false); });
   if (location.hash) openCase(location.hash.slice(1), false);
 })();
+
+/* load the prototype preview only when the card is first hovered */
+document.addEventListener("mouseover", function (e) {
+  var c = e.target.closest && e.target.closest(".has-peek"); if (!c) return;
+  var f = c.querySelector("iframe[data-src]"); if (f) { f.src = f.getAttribute("data-src"); f.removeAttribute("data-src"); }
+});
