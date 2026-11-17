@@ -171,3 +171,16 @@
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
   if (location.hash && document.getElementById("case-" + location.hash.slice(1))) open(location.hash.slice(1));
 })();
+
+/* Full experience list: opening it hides the single-role panel; tapping a stop then opens that role in the list */
+(function () {
+  var jr = document.getElementById("journey"), all = document.getElementById("allxp"); if (!jr || !all) return;
+  var rows = [].slice.call(all.querySelectorAll(".xpfull")), n = jr.querySelectorAll(".stop").length;
+  all.addEventListener("toggle", function () { jr.classList.toggle("listmode", all.open); });
+  jr.addEventListener("click", function (e) {
+    var s = e.target.closest(".stop"); if (!s || !all.open) return;
+    var row = rows[n - 1 - Number(s.getAttribute("data-i"))]; if (!row) return;
+    rows.forEach(function (r) { r.open = r === row; });
+    row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+})();

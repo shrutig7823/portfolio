@@ -435,3 +435,6 @@ body.case-open { overflow: hidden; }
 
 .train svg { scale: -1 1; }
 
+
+/* when the full list is open, the single-role panel steps aside */
+.journey.listmode .jpanel { display: none; }
