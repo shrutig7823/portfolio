@@ -421,3 +421,14 @@ section.contact { padding-bottom: var(--s8); }
 @media (max-width: 620px) { .jtip { left: 30%; } }
 
 html, body { overflow-x: clip; }
+
+/* full case: opens over the page */
+.fullcase { color: var(--accent) !important; border-color: var(--accent) !important; font-weight: 700 !important; }
+.casebox { position: fixed; inset: 0; z-index: 60; background: rgba(28, 27, 25, .55); backdrop-filter: blur(3px); overflow-y: auto; overscroll-behavior: contain; padding: var(--s6) var(--s4); display: flex; justify-content: center; align-items: flex-start; }
+.casebox[hidden] { display: none; }
+.casebox-card { position: relative; width: min(1040px, 100%); background: var(--bg); border-radius: 22px; padding: var(--s4); box-shadow: 0 30px 80px rgba(0, 0, 0, .35); animation: jin .25s ease; }
+.casebox-x { position: sticky; top: 0; float: right; z-index: 3; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--surface); font-size: 24px; line-height: 1; cursor: pointer; margin: 0 0 var(--s2) var(--s2); }
+.casebox-x:hover { background: var(--accent-soft); color: var(--accent); }
+.casebox .feature { margin: 0; box-shadow: none; }
+body.case-open { overflow: hidden; }
+@media (max-width: 620px) { .casebox { padding: 0; } .casebox-card { border-radius: 0; min-height: 100%; padding: var(--s3); } }

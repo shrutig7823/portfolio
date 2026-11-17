@@ -155,3 +155,23 @@ document.addEventListener("mouseover", function (e) {
   });
   setTimeout(function () { if (here && !jr.querySelector(".stop.active.now")) return; }, 0);
 })();
+
+/* Full case: the card's CTA opens the whole write-up over the page */
+(function () {
+  var box = document.getElementById("casebox"), body = document.getElementById("casebody"); if (!box) return;
+  var lastFocus = null;
+  function open(id) {
+    var t = document.getElementById("case-" + id); if (!t) return false;
+    body.replaceChildren(t.content.cloneNode(true)); box.hidden = false; box.scrollTop = 0; document.body.classList.add("case-open");
+    lastFocus = document.activeElement; document.getElementById("caseClose").focus();
+    try { history.replaceState(null, "", "#" + id); } catch (e) { /* ignore */ }
+    return true;
+  }
+  function close() { if (box.hidden) return; box.hidden = true; body.replaceChildren(); document.body.classList.remove("case-open"); try { history.replaceState(null, "", location.pathname + location.search + "#projects"); } catch (e) { /* ignore */ } if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-open]"); if (a && open(a.getAttribute("data-open"))) { e.preventDefault(); return; }
+    if (e.target === box || e.target.closest("#caseClose")) close();
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  if (location.hash && document.getElementById("case-" + location.hash.slice(1))) open(location.hash.slice(1));
+})();
