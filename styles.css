@@ -438,3 +438,9 @@ body.case-open { overflow: hidden; }
 
 /* when the full list is open, the single-role panel steps aside */
 .journey.listmode .jpanel { display: none; }
+
+/* the roles are always listed under the train; tap one to expand it */
+.allxp > summary { display: none; }
+.journey .jpanel { display: none; }
+.allxp { margin-top: var(--s2); }
+.allxp-list { margin-top: var(--s3); }

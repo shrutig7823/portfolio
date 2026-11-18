@@ -178,7 +178,7 @@
   var rows = [].slice.call(all.querySelectorAll(".xpfull")), n = jr.querySelectorAll(".stop").length;
   all.addEventListener("toggle", function () { jr.classList.toggle("listmode", all.open); });
   jr.addEventListener("click", function (e) {
-    var s = e.target.closest(".stop"); if (!s || !all.open) return;
+    var s = e.target.closest(".stop"); if (!s) return;
     var row = rows[n - 1 - Number(s.getAttribute("data-i"))]; if (!row) return;
     rows.forEach(function (r) { r.open = r === row; });
     row.scrollIntoView({ behavior: "smooth", block: "nearest" });
