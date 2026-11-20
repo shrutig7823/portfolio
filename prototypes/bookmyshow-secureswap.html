@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SecureSwap prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #FAF5F1; --surface: #FFFFFF; --ink: #2A1418; --muted: #695257; --line: #EBDDD8; --accent: #B3202F; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF4DC; --warn-ink: #7A4F00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1B1013; --surface: #281A1E; --ink: #F6E9EB; --muted: #BFA9AE; --line: #3E2A30; --accent: #FF8A97; --accent-ink: #1B1013;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #1B1013; --surface: #281A1E; --ink: #F6E9EB; --muted: #BFA9AE; --line: #3E2A30; --accent: #FF8A97; --accent-ink: #1B1013;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px var(--font-ui); padding: 20px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 14px; color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.top { max-width: 980px; margin: 0 auto; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 52ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 12px; line-height: 1.35; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn.solid, .pbtn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.pbtn:disabled { opacity: .4; cursor: not-allowed; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* phone: fixed light app UI */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #170B0E; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(40,10,15,.3); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #25181B; }
+.status { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.hdr { display: flex; align-items: center; gap: 12px; padding: 8px 16px 12px; font-size: 18px; font-weight: 500; flex: none; background: #fff; border-bottom: 1px solid #F0E6E3; }
+.hdr h2 { margin: 0; font: inherit; }
+.hdr h2:focus { outline: none; }
+.hdr button { background: none; border: 0; padding: 4px; cursor: pointer; color: #25181B; display: grid; }
+.scroll { flex: 1; overflow-y: auto; background: #F6F1EF; }
+.sec { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+.sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+.red { color: #C8202F; }
+.foot { padding: 12px 16px 16px; background: #fff; border-top: 1px solid #F0E6E3; display: grid; gap: 10px; flex: none; }
+.btn { font: 500 15px var(--font-app); letter-spacing: .04em; text-transform: uppercase; width: 100%; padding: 14px; border-radius: 8px; border: 1.5px solid #C8202F; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.primary { background: #C8202F; color: #fff; } .btn.outline { background: #fff; color: #B3202F; } .btn.grey { background: #5A6472; border-color: #5A6472; color: #fff; }
+.btn:disabled { background: #EEE8E6; border-color: #EEE8E6; color: #7C7176; cursor: not-allowed; }
+.btn:focus-visible, .opt:focus-visible, .seat:focus-visible, .cat:focus-visible, .chip:focus-visible, .sh:focus-visible { outline: 3px solid #1F5FD1; outline-offset: 2px; }
+.pill { font-size: 11.5px; font-weight: 500; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.green { background: #DCF2E8; color: #0A6A4D; } .pill.amber { background: #FDF1DC; color: #7A4F00; } .pill.blue { background: #E4E9FB; color: #2B3FA6; }
+.fine { font-size: 12px; color: #6A5B5F; line-height: 1.4; }
+.kv { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 14px; gap: 12px; }
+.kv span:first-child { color: #6A5B5F; } .kv b { font-weight: 500; text-align: right; }
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; font-size: 15px; font-weight: 500; }
+.banner.amber { background: #FDF1DC; } .banner.green { background: #DCF2E8; } .banner.teal { background: #14A88A; color: #fff; }
+.banner small { display: block; font-weight: 400; font-size: 12.5px; margin-top: 2px; line-height: 1.35; }
+.banner.amber small, .banner.green small { color: #4B3F43; }
+.warnbox { background: #FDF1DC; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.4; margin-top: 10px; }
+.infobox { background: #EEF1FC; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.4; margin-top: 10px; }
+
+/* artwork: simple shapes, no real images */
+.art { height: 150px; background: linear-gradient(135deg, #3A1C4A, #C8202F 60%, #F29B5C); position: relative; overflow: hidden; flex: none; }
+.art.sm { width: 92px; height: 92px; border-radius: 8px; flex: none; }
+.art::before { content: ""; position: absolute; left: 50%; top: 58%; width: 150%; aspect-ratio: 1; border-radius: 50%; transform: translateX(-50%); background: rgba(20,8,30,.55); }
+.art i { position: absolute; border-radius: 50%; background: rgba(255,255,255,.85); }
+.art i:nth-child(1) { width: 10px; height: 10px; left: 18%; top: 22%; } .art i:nth-child(2) { width: 6px; height: 6px; left: 70%; top: 16%; } .art i:nth-child(3) { width: 8px; height: 8px; left: 84%; top: 36%; }
+.badge { display: inline-block; background: #3A3F4A; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 3px; margin: 10px 16px 0; }
+.evt { margin: 6px 16px 8px; font-size: 21px; font-weight: 700; line-height: 1.2; }
+.meta { display: grid; gap: 8px; padding: 6px 16px 14px; font-size: 14px; }
+.meta div { display: flex; gap: 10px; align-items: center; }
+.meta svg { flex: none; color: #6A5B5F; }
+.cards { display: flex; gap: 10px; padding: 0 16px 14px; overflow-x: auto; }
+.mini { flex: none; width: 118px; }
+.mini .art { height: 76px; border-radius: 8px; } .mini .art::before { top: 62%; }
+.mini span { display: block; font-size: 12px; margin-top: 4px; }
+.cats { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; }
+.cat { flex: none; text-align: center; font-size: 12px; background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-app); color: #25181B; }
+.cat i { display: block; width: 52px; height: 52px; border-radius: 10px; margin: 0 auto 4px; }
+.hero { background: #4A4F5B; color: #fff; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.hero .row2 { display: flex; gap: 12px; }
+.hero b { display: block; font-size: 15px; } .hero small { font-size: 12px; opacity: .85; line-height: 1.35; display: block; margin-top: 4px; }
+
+/* choose id */
+.opt { display: flex; align-items: center; gap: 12px; width: 100%; background: #fff; border: 1.5px solid #E0D5D2; border-radius: 8px; padding: 12px; margin-bottom: 8px; font: 500 15px var(--font-app); color: #25181B; cursor: pointer; text-align: left; }
+.opt[aria-pressed="true"], .opt[aria-checked="true"] { border-color: #C8202F; background: #FDF0F1; }
+.opt .ico { width: 30px; height: 24px; border-radius: 4px; border: 2px solid #5A6472; position: relative; flex: none; }
+.opt .ico::after { content: ""; position: absolute; left: 4px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: #5A6472; }
+.opt small { display: block; color: #6A5B5F; font-weight: 400; font-size: 12px; }
+.opt .dot { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #B8ACAA; flex: none; }
+.opt[aria-pressed="true"] .dot, .opt[aria-checked="true"] .dot { border-color: #C8202F; background: radial-gradient(#C8202F 45%, #fff 50%); }
+.guide { border: 1.5px solid #6D8CE6; background: #EEF2FD; border-radius: 6px; padding: 12px; font-size: 13px; line-height: 1.45; }
+.guide h3 { margin: 0 0 6px; font-size: 14px; font-weight: 700; }
+.guide ol { margin: 0; padding-left: 20px; }
+.ck { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; padding: 12px 0 0; }
+.ck input { width: 20px; height: 20px; margin: 0; accent-color: #C8202F; flex: none; }
+.up { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1.5px dashed #7A93E0; background: #EEF2FD; border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+.up.ok { border: 1.5px solid #14A88A; background: #E6F6F1; }
+.up b { font-weight: 500; font-size: 14px; display: block; } .up small { color: #4B3F43; font-size: 12px; }
+.chip { font: 500 13px var(--font-app); border: 1.5px solid #C8202F; color: #B3202F; background: #fff; border-radius: 6px; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+.spin { width: 54px; height: 54px; border-radius: 50%; border: 5px solid #F0D6D9; border-top-color: #C8202F; margin: 10px auto 14px; }
+.centerbox { text-align: center; padding: 28px 22px; }
+.centerbox h3 { font-size: 19px; font-weight: 500; margin: 0 0 8px; }
+.stepper { display: grid; text-align: left; margin-top: 18px; }
+.st { display: flex; gap: 12px; font-size: 13.5px; position: relative; padding-bottom: 14px; }
+.st:last-child { padding-bottom: 0; }
+.st i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #C9BEBB; background: #fff; flex: none; z-index: 1; display: grid; place-items: center; }
+.st:not(:last-child)::before { content: ""; position: absolute; left: 8px; top: 18px; bottom: 0; width: 2px; background: #E5DCD9; }
+.st.done i { background: #14A88A; border-color: #14A88A; } .st.now i { border-color: #C8202F; } .st.now i::after { content: ""; width: 6px; height: 6px; background: #C8202F; border-radius: 50%; }
+.st small { display: block; color: #6A5B5F; font-size: 12px; }
+
+/* seats */
+.stage { background: #5A6472; color: #fff; text-align: center; font-size: 12px; letter-spacing: .2em; padding: 6px; border-radius: 4px 4px 22px 22px; margin: 4px 24px 14px; }
+.grid { display: grid; gap: 7px; justify-content: center; }
+.grid .r { display: flex; gap: 7px; align-items: center; }
+.grid .r span { width: 16px; font-size: 11px; color: #6A5B5F; text-align: center; }
+.seat { width: 30px; height: 30px; border-radius: 6px 6px 3px 3px; border: 1.5px solid #14A88A; background: #fff; font: 500 10px var(--font-app); color: #0A6A4D; cursor: pointer; padding: 0; }
+.seat[aria-pressed="true"] { background: #C8202F; border-color: #C8202F; color: #fff; }
+.seat:disabled { background: #E4DEDC; border-color: #E4DEDC; color: #8E8286; cursor: not-allowed; }
+.legend { display: flex; gap: 14px; justify-content: center; font-size: 12px; color: #4B3F43; padding: 14px 0 4px; flex-wrap: wrap; }
+.legend span { display: flex; gap: 6px; align-items: center; }
+.legend i { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid #14A88A; display: inline-block; }
+.legend .sel { background: #C8202F; border-color: #C8202F; } .legend .tk { background: #E4DEDC; border-color: #E4DEDC; }
+.qty { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+.qty small { color: #6A5B5F; display: block; font-size: 12px; }
+.tick { background: #fff; margin: 12px 16px; border-radius: 10px; box-shadow: 0 1px 6px rgba(40,10,15,.12); overflow: hidden; }
+.tick .top { display: flex; gap: 12px; padding: 12px; max-width: none; margin: 0; }
+.tick .top .art.sm { width: 64px; height: 76px; }
+.tick .top b { display: block; font-size: 15px; font-weight: 500; line-height: 1.25; } .tick .top small { color: #6A5B5F; font-size: 12px; display: block; margin-top: 3px; }
+.tick .mid { border-top: 1.5px dashed #D8CCC9; padding: 12px; display: flex; gap: 14px; align-items: center; }
+.big4 { font-size: 40px; font-weight: 700; line-height: 1; }
+.qr { width: 66px; height: 66px; flex: none; background: conic-gradient(#25181B 25%, #fff 0 50%, #25181B 0 75%, #fff 0) 0 0/16px 16px; border: 4px solid #fff; outline: 1.5px solid #25181B; margin-left: auto; }
+.sh { display: flex; align-items: center; gap: 8px; width: 100%; background: #F6F1EF; border: 1px solid #E0D5D2; border-radius: 8px; padding: 10px 12px; font: 400 13px var(--font-app); color: #25181B; cursor: pointer; text-align: left; margin-top: 8px; }
+.sh b { font-weight: 500; margin-left: auto; color: #B3202F; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: #25181B; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 4; line-height: 1.35; }
+.tabs { display: flex; gap: 8px; padding: 10px 16px; background: #fff; border-bottom: 1px solid #F0E6E3; }
+.tabs span { font-size: 13px; padding: 6px 12px; border-radius: 999px; background: #F0E6E3; } .tabs span.on { background: #25181B; color: #fff; }
+.btm { display: flex; justify-content: space-around; padding: 10px 0 14px; border-top: 1px solid #F0E6E3; background: #fff; flex: none; }
+.btm span { width: 26px; height: 22px; border-radius: 5px; background: #D8CCC9; } .btm span:first-child { background: #C8202F; }
+.ok { width: 64px; height: 64px; margin: 6px auto 10px; display: block; }
+
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .view.enter { animation: fade .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+}
+</style>
+</head>
+<body>
+<div class="top"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Ticketing case study &middot; Live events</div>
+      <h1>SecureSwap</h1>
+      <p class="lede">Before booking opens for a high-demand live event, a user verifies identity by linking a government-issued ID. Verified fans can book up to 4 tickets and share them with friends who are also verified, so bots and scalpers are filtered out. If plans change, tickets can be returned, pooled and passed to other verified users. Tap through both flows on the right.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not the real app, no ID or payment is collected or sent</span>
+      <div class="row" role="group" aria-label="Choose flow">
+        <button class="pbtn" type="button" id="fBook" aria-pressed="true">Book flow</button>
+        <button class="pbtn" type="button" id="fRet" aria-pressed="false">Return tickets flow</button>
+      </div>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="row">
+        <button class="pbtn solid" id="skip" type="button" disabled>Finish verification</button>
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Screens follow the wireframes in the case study. Event, venue, dates, seats and prices are sample values. The document buttons only mark a document as added: no file is opened, read or stored. Verification is described in the case study as taking around 24 hours; here it finishes after a few seconds or when you press Finish verification.</p>
+    </div>
+  </section>
+  <div class="phone" role="region" aria-label="Simulated ticketing app screen"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  var MAXQ = 4, PRICE = 1000;
+  var EVENT = "Sample Live Night &middot; Example Tour", VENUE = "Sample Arena, Goa", WHEN = "Sat, 14 Dec 2030", TIME = "6:00 PM";
+  var BOOK = ["home", "event", "intro", "choose", "guide", "upload", "verifying", "verified", "seats", "payment", "address", "tickets"];
+  var BLAB = { home: "Home: Live events", event: "Event page, Book Now", intro: "SecureSwap introduction", choose: "Choose ID or saved card", guide: "Read the guidelines", upload: "Upload document", verifying: "Verification in progress", verified: "Verified, Book Now", seats: "Select seats", payment: "Payment", address: "Delivery address", tickets: "Get tickets" };
+  var RET = ["rmy", "rinfo", "rpick", "rdone"];
+  var RLAB = { rmy: "My tickets", rinfo: "Return Tickets", rpick: "Choose how many to return", rdone: "Tickets go back to the pool" };
+  var IDS = ["Aadhar Card", "Driving License", "Passport", "PAN Card"];
+  var TAKEN = { "A3": 1, "A4": 1, "B1": 1, "B6": 1, "C2": 1, "C3": 1, "C4": 1, "D5": 1, "D6": 1, "E1": 1, "E8": 1 };
+  var ROWS = ["A", "B", "C", "D", "E"], COLS = 8;
+  var S, timer = null, toastT = null, lastScreen = "", focusNext = false;
+
+  function fresh(flow) {
+    return { flow: flow || "book", screen: flow === "return" ? "rmy" : "home", idType: "", saved: false, imgDoc: false, pdfDoc: false, agreed: false,
+      seats: [], pay: "upi", addr: 0, invite: false, owned: 4, retCount: 1, retDone: 0, toast: "" };
+  }
+  S = fresh("book");
+
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>',
+    cal: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    clock: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    pin: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+    person: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/></svg>',
+    up: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>',
+    ok: '<svg class="ok" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#14A88A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>',
+    warn: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="10" fill="#F5A623"/><path d="M12 7v6M12 16.5v.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>'
+  };
+  function status() { return '<div class="status"><span>3:03</span><span>5G &#9646;&#9646;&#9646; 72</span></div>'; }
+  function hdr(t, back, sub) {
+    return '<div class="hdr">' + (back ? '<button type="button" data-act="' + back + '" aria-label="Back">' + ic.back + '</button>' : "") + '<div><h2 tabindex="-1">' + t + '</h2>' + (sub ? '<div class="fine">' + sub + '</div>' : "") + '</div></div>';
+  }
+  function art(cls) { return '<div class="art ' + (cls || "") + '" role="img" aria-label="Sample event artwork (simple shapes)"><i></i><i></i><i></i></div>'; }
+  function inr(n) { return "&#8377;" + n.toLocaleString("en-IN"); }
+  function foot(inner) { return '<div class="foot">' + inner + '</div>'; }
+  function btn(act, label, cls, dis) { return '<button type="button" class="btn ' + (cls || "primary") + '" data-act="' + act + '"' + (dis ? " disabled" : "") + '>' + label + '</button>'; }
+  function meta() {
+    return '<div class="meta"><div>' + ic.cal + WHEN + '</div><div>' + ic.clock + TIME + '</div><div>' + ic.person + 'Age limit: 16 yrs +</div><div>' + ic.pin + VENUE + '</div></div>';
+  }
+  function eventTop() { return art() + '<span class="badge">Music Show</span><div class="evt">' + EVENT + '</div>' + meta(); }
+
+  /* ---- booking screens ---- */
+  function home() {
+    var cats = ["Music shows", "Sports", "Comedy shows", "Adventure"].map(function (c, i) {
+      return '<button type="button" class="cat" data-act="toast" data-msg="Only the featured live event is wired up in this concept."><i style="background:' + ["#E6458F", "#2F4F9E", "#E8B83A", "#3E9A8A"][i] + '"></i>' + c + '</button>';
+    }).join("");
+    return status() + '<div class="view"><div class="hdr"><div><h2 tabindex="-1">Experience Live Events</h2><div class="red" style="font-size:12px">Goa (sample)</div></div></div>' +
+      '<div class="scroll"><div style="background:#fff"><div class="cats">' + cats + '</div></div>' +
+      '<div class="hero"><div class="row2"><div class="art sm" style="height:92px" role="img" aria-label="Sample event artwork"><i></i><i></i><i></i></div><div><b>' + EVENT + '</b><small>Sample listing for a high-demand live event. Verify your identity to book.</small></div></div>' +
+      btn("event", "Book now") + '</div>' +
+      '<div class="sec" style="margin-top:8px"><h3>Similar to what you&rsquo;ve booked before</h3><div class="cards"><div class="mini"><div class="art"><i></i><i></i><i></i></div><span>Sample Night 2</span></div><div class="mini"><div class="art"><i></i><i></i><i></i></div><span>Sample Night 3</span></div><div class="mini"><div class="art"><i></i><i></i><i></i></div><span>Sample Night 4</span></div></div></div></div>' +
+      '<div class="btm" aria-hidden="true"><span></span><span></span><span></span><span></span></div></div>';
+  }
+  function event() {
+    return status() + '<div class="view">' + hdr("Event details", "home") + '<div class="scroll" style="background:#fff">' + eventTop() +
+      '<div class="sec" style="margin-top:6px"><div class="warnbox" style="margin:0">High-demand event: you can book only after verifying your identity with a government ID, at least one day before booking starts.</div></div></div>' +
+      foot(btn("intro", "Verify to book tickets", "grey")) + '</div>';
+  }
+  function intro() {
+    return status() + '<div class="view">' + hdr("SecureSwap", "event") + '<div class="scroll"><div class="sec"><h3 class="red">Introducing SecureSwap</h3>' +
+      '<p style="margin:0 0 10px;font-size:14px;line-height:1.5">For high-demand events, tickets go to verified users only. Link a government-issued ID once, and you can book, share tickets with verified friends or family, and return tickets if plans change.</p>' +
+      '<div class="kv"><span>Max tickets per user</span><b>' + MAXQ + '</b></div><div class="kv"><span>Verification</span><b>Up to about 24 hours</b></div><div class="kv"><span>Do it by</span><b>1 day before booking starts</b></div></div></div>' +
+      foot(btn("choose", "Get started")) + '</div>';
+  }
+  function choose() {
+    var list = IDS.map(function (n) {
+      return '<button type="button" class="opt" data-id="' + n + '" aria-pressed="' + (!S.saved && S.idType === n) + '"><span class="ico"></span>' + n + '<span class="dot"></span></button>';
+    }).join("");
+    var ok = S.saved || S.idType;
+    return status() + '<div class="view">' + hdr("SecureSwap", "intro") + '<div class="scroll"><div class="sec"><h3 class="red">Choose Identification Card</h3>' + list + '</div>' +
+      '<div class="sec"><h3 class="red">Saved Identity cards</h3><button type="button" class="opt" data-saved="1" aria-pressed="' + S.saved + '"><span class="ico"></span><span>Aadhar Card<small>Sample saved card, 82632xxxx</small></span><span class="dot"></span></button></div></div>' +
+      foot(btn("guide", "Continue", "primary", !ok)) + '</div>';
+  }
+  function guide() {
+    return status() + '<div class="view">' + hdr("SecureSwap", "choose") + '<div class="scroll"><div class="sec"><div class="guide"><h3>Identity Verification Information</h3><ol>' +
+      '<li>Upload the digital copy of any of the listed IDs until one day before the booking window starts.</li><li>Verification can take up to 24 hours.</li>' +
+      '<li>Identity verification is mandatory to book tickets and be part of the queue, but it does not ensure that you will get a ticket.</li><li>Re-upload an alternate document in case the first is not verified.</li></ol></div>' +
+      '<label class="ck"><input type="checkbox" id="agree"' + (S.agreed ? " checked" : "") + '><span>I have read the guidelines</span></label></div></div>' +
+      foot(btn(S.saved ? "verify" : "upload", S.saved ? "Verify now" : "Continue", "primary", !S.agreed)) + '</div>';
+  }
+  function upload() {
+    var both = S.imgDoc || S.pdfDoc;
+    function row(kind, label, done) {
+      return '<div class="up ' + (done ? "ok" : "") + '"><div><b>' + label + '</b><small>' + (done ? "Document added (sample, no file was read)" : "Tap the button to simulate adding a file") + '</small></div>' +
+        '<button type="button" class="chip" data-doc="' + kind + '"' + (done ? ' aria-pressed="true"' : "") + '>' + (done ? "Remove" : (kind === "img" ? "Choose image" : "Choose PDF")) + '</button></div>';
+    }
+    return status() + '<div class="view">' + hdr("SecureSwap", "guide") + '<div class="scroll"><div class="sec"><h3>Enter Document Details</h3>' +
+      '<div class="kv"><span>Document type</span><b>' + S.idType + '</b></div><p class="fine" style="margin:4px 0 12px">No name or number is asked for in this concept, and nothing is typed or sent.</p>' +
+      row("img", "1) Upload Image", S.imgDoc) + '<div class="fine" style="text-align:center;margin:2px 0 8px"><b>OR</b></div>' + row("pdf", "2) Upload Digital copy (PDF)", S.pdfDoc) + '</div></div>' +
+      foot(btn("verify", "Verify now", "primary", !both)) + '</div>';
+  }
+  function verifying() {
+    return status() + '<div class="view">' + hdr("SecureSwap", "") + '<div class="scroll" style="background:#fff"><div class="centerbox"><div class="spin" aria-hidden="true"></div><h3>Verification in progress</h3>' +
+      '<p class="fine" style="font-size:13px">Your document is being checked. The case study describes this as taking around 24 hours, and you are notified of the result. This prototype finishes in a few seconds.</p>' +
+      '<div class="stepper"><div class="st done"><i></i><div>Request sent<small>Document submitted</small></div></div><div class="st now"><i></i><div>Verifying document authenticity<small>Result will be added to your profile</small></div></div><div class="st"><i></i><div>Verified<small>You can book tickets</small></div></div></div></div></div>' +
+      '<div class="foot"><div class="banner amber" style="border-radius:8px;padding:10px 12px;font-size:13px;background:#E6EEFB;color:#1F3F8C">VERIFICATION IN PROGRESS...</div></div></div>';
+  }
+  function verified() {
+    return status() + '<div class="view">' + hdr("Event details", "") + '<div class="scroll" style="background:#fff"><div class="banner green" role="status"><svg width="22" height="22" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="10" fill="#14A88A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg><div>You are verified<small>You can now book up to ' + MAXQ + ' tickets.</small></div></div>' + eventTop() + '</div>' +
+      foot(btn("seats", "Book now")) + '</div>';
+  }
+  function seatsFn() {
+    var g = ROWS.map(function (r) {
+      var cells = "";
+      for (var c = 1; c <= COLS; c++) {
+        var id = r + c, taken = !!TAKEN[id], sel = S.seats.indexOf(id) >= 0;
+        cells += '<button type="button" class="seat" data-seat="' + id + '" aria-pressed="' + sel + '" aria-label="Seat ' + id + (taken ? ", taken" : sel ? ", selected" : ", available") + '"' + (taken ? " disabled" : "") + '>' + c + '</button>';
+      }
+      return '<div class="r"><span aria-hidden="true">' + r + '</span>' + cells + '</div>';
+    }).join("");
+    var n = S.seats.length;
+    return status() + '<div class="view">' + hdr("Select seats", "verified", EVENT + " &middot; sample layout") + '<div class="scroll" style="background:#fff"><div style="padding-top:14px"><div class="stage">STAGE</div><div class="grid">' + g + '</div>' +
+      '<div class="legend"><span><i></i>Available</span><span><i class="sel"></i>Selected</span><span><i class="tk"></i>Taken</span></div></div>' +
+      '<div class="sec" style="margin-top:12px"><div class="qty"><div>Selected: <b>' + n + ' of ' + MAXQ + '</b><small>' + (n ? S.seats.slice().sort().join(", ") : "Choose up to " + MAXQ + " seats") + '</small></div><div><b>' + inr(n * PRICE) + '</b><small>Sample price ' + inr(PRICE) + ' each</small></div></div></div></div>' +
+      foot(btn("payment", n ? "Proceed to pay " + inr(n * PRICE) : "Select seats", "primary", !n)) + '</div>';
+  }
+  function payment() {
+    var n = S.seats.length, fee = n * 50, tot = n * PRICE + fee;
+    var m = [["upi", "Sample UPI"], ["card", "Sample card"], ["wallet", "Sample wallet"]].map(function (p) {
+      return '<button type="button" class="opt" role="radio" aria-checked="' + (S.pay === p[0]) + '" data-pay="' + p[0] + '">' + p[1] + '<span class="dot"></span></button>';
+    }).join("");
+    return status() + '<div class="view">' + hdr("Payment", "seats") + '<div class="scroll"><div class="sec"><h3>Order summary</h3><div class="kv"><span>' + n + ' ticket' + (n > 1 ? "s" : "") + ' (' + S.seats.slice().sort().join(", ") + ')</span><b>' + inr(n * PRICE) + '</b></div><div class="kv"><span>Convenience fee (sample)</span><b>' + inr(fee) + '</b></div><div class="kv" style="border-top:1px solid #EEE;margin-top:4px"><span><b>TOTAL</b></span><b>' + inr(tot) + '</b></div></div>' +
+      '<div class="sec"><h3>Pay with</h3><div role="radiogroup" aria-label="Payment method">' + m + '</div><p class="fine" style="margin:6px 0 0">No payment details are entered or sent in this concept.</p></div></div>' +
+      foot(btn("address", "Pay " + inr(tot))) + '</div>';
+  }
+  function address() {
+    var a = ["Sample address 1, Sample Street, Goa", "Sample address 2, Sample Road, Goa"].map(function (t, i) {
+      return '<button type="button" class="opt" role="radio" aria-checked="' + (S.addr === i) + '" data-addr="' + i + '"><span>' + (i ? "Work (sample)" : "Home (sample)") + '<small>' + t + '</small></span><span class="dot"></span></button>';
+    }).join("");
+    return status() + '<div class="view">' + hdr("Delivery address", "payment") + '<div class="scroll"><div class="sec"><h3>Where should we deliver?</h3><div role="radiogroup" aria-label="Delivery address">' + a + '</div><p class="fine" style="margin:6px 0 0">Sample addresses only. Nothing is typed or stored.</p></div></div>' +
+      foot(btn("tickets", "Get tickets")) + '</div>';
+  }
+  function tickets() {
+    var n = S.seats.length, friends = n - 1;
+    var inv = "";
+    if (S.invite) {
+      inv = '<div class="infobox">Tickets for friends or family must be shared within 48 hours. They need to download the app and get verified to use them.</div>';
+      for (var i = 1; i <= friends; i++) inv += '<div class="sh" style="cursor:default">Friend ' + i + ' <b>Invite sent (sample)</b></div>';
+    }
+    return status() + '<div class="view">' + hdr(EVENT, "", WHEN) + '<div class="scroll"><div class="banner teal" role="status"><div>BOOKING CONFIRMED<small style="color:#fff;font-size:16px;margin-top:4px;font-weight:500">Enjoy the show!</small></div></div>' +
+      '<div class="tick"><div class="top">' + art("sm") + '<div><b>' + EVENT + '</b><small>' + WHEN + ' &middot; ' + TIME + '</small><small>' + VENUE + '</small></div></div>' +
+      '<div class="mid"><div class="big4">' + n + '</div><div><b style="font-weight:500">Seats: ' + S.seats.slice().sort().join(", ") + '</b><div class="fine">Booking ID: SAMPLE-0001</div></div><div class="qr" role="img" aria-label="Sample code pattern"></div></div></div>' +
+      '<div class="sec">' + (friends > 0 ? '<button type="button" class="chip" style="width:100%;padding:11px" data-act="invite">' + (S.invite ? "Hide invites" : "Invite friends") + '</button>' + inv : '<div class="fine">Booked for one. You can still return the ticket if plans change.</div>') +
+      '<p class="fine" style="margin:10px 0 0">Tickets are linked to verified IDs. The ID is checked at event entry.</p></div></div>' +
+      foot(btn("toreturn", "Return tickets", "outline") + btn("home", "Back to home", "primary")) + '</div>';
+  }
+
+  /* ---- return screens ---- */
+  function rmy() {
+    return status() + '<div class="view">' + hdr("My tickets", "") + '<div class="tabs" aria-hidden="true"><span class="on">Upcoming</span><span>Past</span></div><div class="scroll">' +
+      '<div class="tick"><div class="top">' + art("sm") + '<div><b>' + EVENT + '</b><small>' + WHEN + ' &middot; ' + TIME + '</small><small>' + VENUE + '</small></div></div>' +
+      '<div class="mid"><div class="big4">' + S.owned + '</div><div><b style="font-weight:500">Seats (sample)</b><div class="fine">Booking ID: SAMPLE-0001</div></div><span class="pill green" style="margin-left:auto">Verified</span></div></div>' +
+      '<div class="sec"><div class="fine">Plans changed? Verified users can return tickets in the return window. They are pooled and given to other verified users.</div></div></div>' +
+      foot(btn("rinfo", "Return tickets", "outline")) + '</div>';
+  }
+  function rinfo() {
+    return status() + '<div class="view">' + hdr("Return Tickets", "rmy") + '<div class="scroll"><div class="sec"><h3 class="red">How returns work</h3><div class="stepper">' +
+      '<div class="st done"><i></i><div>Return window opens<small>2-3 weeks before the event, depending on supply and demand</small></div></div>' +
+      '<div class="st now"><i></i><div>You return tickets<small>They join a pool of returned tickets</small></div></div>' +
+      '<div class="st"><i></i><div>Window closes, then 2 days later<small>Pooled tickets go to verified users without a ticket</small></div></div>' +
+      '<div class="st"><i></i><div>Second round of distribution<small>You then find out if your tickets were transferred</small></div></div></div></div>' +
+      '<div class="sec"><div class="infobox" style="margin:0">Redistribution is first come, first served: both for the people returning tickets and for the people buying them.</div></div></div>' +
+      foot(btn("rpick", "Proceed to Return Tickets")) + '</div>';
+  }
+  function rpick() {
+    var o = "";
+    for (var i = 1; i <= S.owned; i++) o += '<button type="button" class="opt" role="radio" aria-checked="' + (S.retCount === i) + '" data-ret="' + i + '">Return ' + i + ' ticket' + (i > 1 ? "s" : "") + '<span class="dot"></span></button>';
+    return status() + '<div class="view">' + hdr("Return Tickets", "rinfo") + '<div class="scroll"><div class="sec"><h3>How many tickets?</h3><div role="radiogroup" aria-label="Number of tickets to return">' + o + '</div>' +
+      '<div class="warnbox">You will keep ' + (S.owned - S.retCount) + ' of ' + S.owned + ' tickets. Returned tickets are pooled; there is no guarantee they are passed on.</div></div></div>' +
+      foot(btn("rconfirm", "Return " + S.retCount + " ticket" + (S.retCount > 1 ? "s" : ""))) + '</div>';
+  }
+  function rdone() {
+    var c = S.retDone;
+    return status() + '<div class="view">' + hdr("Return Tickets", "") + '<div class="scroll" style="background:#fff"><div class="centerbox">' + ic.ok + '<h3>' + c + ' ticket' + (c > 1 ? "s" : "") + ' returned to the pool</h3>' +
+      '<p class="fine" style="font-size:13px;line-height:1.5">Your returned ticket' + (c > 1 ? "s join" : " joins") + ' the pool. About 2 days after the return window closes they are offered to verified users who do not have a ticket. You will know after the second round of distribution whether they were transferred.</p>' +
+      '<div class="kv" style="margin-top:12px"><span>Tickets you still hold</span><b>' + (S.owned) + '</b></div></div></div>' +
+      foot(btn("rmy", "Back to my tickets", "outline")) + '</div>';
+  }
+
+  var SCREENS = { home: home, event: event, intro: intro, choose: choose, guide: guide, upload: upload, verifying: verifying, verified: verified, seats: seatsFn, payment: payment, address: address, tickets: tickets, rmy: rmy, rinfo: rinfo, rpick: rpick, rdone: rdone };
+
+  function steps() {
+    var ord = S.flow === "book" ? BOOK : RET, lab = S.flow === "book" ? BLAB : RLAB, idx = ord.indexOf(S.screen);
+    document.getElementById("steps").innerHTML = ord.map(function (k, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + lab[k] + '</li>';
+    }).join("");
+    document.getElementById("skip").disabled = S.screen !== "verifying";
+    document.getElementById("fBook").setAttribute("aria-pressed", S.flow === "book");
+    document.getElementById("fRet").setAttribute("aria-pressed", S.flow === "return");
+  }
+  function render() {
+    var el = document.getElementById("app");
+    el.innerHTML = SCREENS[S.screen]() + (S.toast ? '<div class="toast" role="status">' + S.toast + '</div>' : "");
+    if (S.screen !== lastScreen) {
+      var vw = el.querySelector(".view"); if (vw) vw.classList.add("enter");
+      lastScreen = S.screen;
+      if (focusNext) { var h = el.querySelector("h2"); if (h) h.focus({ preventScroll: true }); }
+    }
+    focusNext = false;
+    steps();
+  }
+  function go(s) {
+    clearTimeout(timer); S.screen = s; S.toast = ""; focusNext = true; render();
+    if (s === "verifying") timer = setTimeout(function () { if (S.screen === "verifying") go("verified"); }, 5000);
+  }
+  function toast(m) {
+    S.toast = m; render(); clearTimeout(toastT);
+    toastT = setTimeout(function () { S.toast = ""; render(); }, 2600);
+  }
+  function setFlow(f) { clearTimeout(timer); var keep = S.owned; S = fresh(f); lastScreen = ""; focusNext = false; render(); }
+
+  document.getElementById("app").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-id],[data-saved],[data-doc],[data-seat],[data-pay],[data-addr],[data-ret]"); if (!t) return;
+    var d = t.dataset;
+    if (d.id) { S.idType = d.id; S.saved = false; return render(); }
+    if (d.saved) { S.saved = true; S.idType = "Aadhar Card"; return render(); }
+    if (d.doc) { if (d.doc === "img") S.imgDoc = !S.imgDoc; else S.pdfDoc = !S.pdfDoc; return render(); }
+    if (d.seat) {
+      var i = S.seats.indexOf(d.seat);
+      if (i >= 0) { S.seats.splice(i, 1); return render(); }
+      if (S.seats.length >= MAXQ) return toast("You can book a maximum of " + MAXQ + " tickets.");
+      S.seats.push(d.seat); return render();
+    }
+    if (d.pay) { S.pay = d.pay; return render(); }
+    if (d.addr) { S.addr = parseInt(d.addr, 10); return render(); }
+    if (d.ret) { S.retCount = parseInt(d.ret, 10); return render(); }
+    var a = d.act;
+    if (a === "toast") return toast(d.msg);
+    if (a === "invite") { S.invite = !S.invite; return render(); }
+    if (a === "verify") return go("verifying");
+    if (a === "toreturn") { var seats = S.seats.length || 4; S = fresh("return"); S.owned = seats; lastScreen = ""; focusNext = true; return render(); }
+    if (a === "rconfirm") { S.retDone = S.retCount; S.owned = S.owned - S.retCount; S.retCount = 1; return go("rdone"); }
+    if (a === "rmy" && S.screen === "rdone" && S.owned < 1) { S.owned = 4; }
+    go(a);
+  });
+  document.getElementById("app").addEventListener("change", function (e) {
+    if (e.target.id === "agree") { S.agreed = e.target.checked; render(); var c = document.getElementById("agree"); if (c) c.focus(); }
+  });
+  document.getElementById("skip").addEventListener("click", function () { if (S.screen === "verifying") go("verified"); });
+  document.getElementById("reset").addEventListener("click", function () { setFlow(S.flow); });
+  document.getElementById("fBook").addEventListener("click", function () { setFlow("book"); });
+  document.getElementById("fRet").addEventListener("click", function () { setFlow("return"); });
+  render();
+})();
+</script>
+</body>
+</html>

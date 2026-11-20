@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fitness subscription prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: explainer + flow steps on the left, one phone running the flow on the right.
+   Page chrome is themed; the phone screen is a fixed light app UI. */
+:root {
+  --bg: #F2F7F5; --surface: #FFFFFF; --ink: #12261F; --muted: #4F6159; --line: #D5E3DD; --accent: #0E7C66; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF4DC; --warn-ink: #7A4F00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C1B17; --surface: #14281F; --ink: #E6F2ED; --muted: #A5BBB2; --line: #264036; --accent: #5FD1B3; --accent-ink: #0C1B17;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0C1B17; --surface: #14281F; --ink: #E6F2ED; --muted: #A5BBB2; --line: #264036; --accent: #5FD1B3; --accent-ink: #0C1B17;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px;
+  padding-block: 20px 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { max-width: 980px; margin: 0 auto 14px; }
+.top a { color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none; border-radius: 6px; padding: 4px 2px; }
+.top a:hover { text-decoration: underline; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 52ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn.solid { background: var(--accent); color: var(--accent-ink); }
+.pbtn:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #0B1220; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(10,30,25,.28); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #1B2A25; }
+.screen button:focus-visible { outline: 3px solid #0E7C66; outline-offset: 2px; }
+.status { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.hdr { display: flex; align-items: center; gap: 12px; padding: 8px 16px 10px; font-size: 18px; font-weight: 500; flex: none; background: #fff; }
+.hdr button { background: none; border: 0; padding: 4px; cursor: pointer; color: #1B2A25; display: grid; border-radius: 6px; }
+.hdr h2, .ttl { margin: 0; font-size: 20px; font-weight: 500; line-height: 1.25; }
+.ttl:focus { outline: none; }
+.scroll { flex: 1; overflow-y: auto; background: #F1F6F4; }
+.pad { padding: 16px; }
+.sec { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+.sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+.sub { color: #4F6159; font-size: 14px; line-height: 1.45; margin: 6px 0 0; }
+.small { font-size: 12px; color: #4F6159; line-height: 1.4; }
+.foot { padding: 12px 16px 16px; background: #fff; border-top: 1px solid #E3ECE8; display: grid; gap: 10px; flex: none; }
+.btn { font: 500 15px var(--font-app); letter-spacing: .04em; text-transform: uppercase; width: 100%; padding: 14px; border-radius: 8px; border: 1.5px solid #0E7C66; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.primary { background: #0E7C66; color: #fff; } .btn.outline { background: #fff; color: #0E7C66; }
+.btn:disabled { background: #E3ECE8; border-color: #E3ECE8; color: #6B7C74; cursor: not-allowed; }
+.pbar { height: 6px; background: #DCE8E3; border-radius: 99px; overflow: hidden; margin: 0 16px; }
+.pbar i { display: block; height: 100%; background: #0E7C66; border-radius: 99px; }
+.qmeta { display: flex; justify-content: space-between; font-size: 12.5px; color: #4F6159; padding: 8px 16px 0; }
+.opts { display: grid; gap: 10px; margin-top: 16px; }
+.opt { text-align: left; background: #fff; border: 1.5px solid #CFDDD7; border-radius: 12px; padding: 14px; font: 400 15px var(--font-app); color: #1B2A25; cursor: pointer; display: flex; gap: 12px; align-items: center; width: 100%; }
+.opt .dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #8AA196; flex: none; display: grid; place-items: center; }
+.opt[aria-pressed="true"] { border-color: #0E7C66; background: #E6F4EF; }
+.opt[aria-pressed="true"] .dot { border-color: #0E7C66; }
+.opt[aria-pressed="true"] .dot::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #0E7C66; }
+.opt small { display: block; color: #4F6159; font-size: 12.5px; margin-top: 2px; }
+.hero { padding: 26px 20px 8px; text-align: center; background: #fff; }
+.hero svg { display: block; margin: 0 auto 14px; }
+.hero h2 { margin: 0 0 8px; font-size: 26px; font-weight: 500; line-height: 1.2; }
+.hero p { margin: 0 auto; max-width: 30ch; font-size: 15px; line-height: 1.45; color: #4F6159; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+.list li { display: flex; gap: 10px; align-items: flex-start; line-height: 1.4; }
+.list svg { flex: none; margin-top: 2px; }
+.pill { font-size: 11.5px; font-weight: 500; padding: 4px 9px; border-radius: 999px; white-space: nowrap; display: inline-block; }
+.pill.amber { background: #FDF1DC; color: #7A4F00; } .pill.green { background: #DDF3EA; color: #0A6A50; } .pill.grey { background: #E8EEEB; color: #3E4F48; }
+.kv { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 14px; gap: 12px; }
+.kv span:first-child { color: #4F6159; }
+.kv b { font-weight: 500; text-align: right; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: #E6F4EF; color: #0A6A50; font-weight: 500; }
+.chips span.off { background: #EEF2F0; color: #55655E; font-weight: 400; }
+.ex { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #EEF2F0; font-size: 14px; }
+.ex:last-child { border-bottom: 0; }
+.ex span:last-child { color: #4F6159; white-space: nowrap; }
+.sample { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; background: #FDF1DC; color: #7A4F00; padding: 3px 8px; border-radius: 6px; }
+.why { background: #E6F4EF; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.45; margin-top: 10px; }
+.warnbox { background: #FDF1DC; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.45; margin-top: 10px; color: #4A3200; }
+.ring { width: 96px; height: 96px; flex: none; }
+.dayrow { display: flex; gap: 16px; align-items: center; }
+.days14 { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; margin-top: 12px; }
+.days14 i { height: 8px; border-radius: 3px; background: #DCE8E3; }
+.days14 i.on { background: #0E7C66; }
+.feat { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid #EEF2F0; font-size: 14px; }
+.feat:last-child { border-bottom: 0; }
+.feat > span:first-child { flex: 1; }
+.tease { width: 100%; text-align: left; border: 1.5px dashed #0E7C66; background: #F3FAF7; color: #0A6A50; border-radius: 12px; padding: 12px 14px; font: 500 14px var(--font-app); cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tier { background: #fff; border: 1.5px solid #CFDDD7; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.tier.rec { border-color: #0E7C66; }
+.tier h3 { margin: 0; font-size: 18px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tier .price { font-size: 15px; margin: 4px 0 10px; color: #1B2A25; font-weight: 500; }
+.tier .list { margin-bottom: 12px; }
+.tier .btn { padding: 11px; font-size: 14px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.seg button { border: 1.5px solid #CFDDD7; background: #fff; border-radius: 10px; padding: 12px 4px; font: 500 13.5px var(--font-app); color: #1B2A25; cursor: pointer; }
+.seg button[aria-pressed="true"] { border-color: #0E7C66; background: #E6F4EF; color: #0A6A50; }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.cmp > div { border: 1px solid #DCE8E3; border-radius: 10px; padding: 10px 12px; }
+.cmp small { color: #4F6159; font-size: 12px; display: block; margin-bottom: 4px; }
+.cmp b { font-size: 14px; font-weight: 500; display: block; line-height: 1.5; }
+.cmp .new { border-color: #0E7C66; background: #F3FAF7; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 90px; background: #1B2A25; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 4; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } .hero h2 { font-size: 23px; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } .pbar i { transition: width .25s ease; } }
+</style>
+</head>
+<body>
+<div class="top"><a href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Fitness app &middot; Subscription model</div>
+      <h1>Onboarding to paid, a concept flow</h1>
+      <p class="lede">This prototypes the MVP-1 features from my PRD for a fitness-app subscription model. The PRD has no wireframes, so the screens are my interpretation: a 2-minute onboarding quiz, a sample personalised plan, a 14-day limited trial, Basic / Premium / Super tiers, and a plan that adjusts from feedback.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not a real app, no payment is taken</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="row">
+        <button class="pbtn solid" id="day14" type="button">Simulate day 14</button>
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">"Simulate day 14" is enabled once the trial starts. Every plan, workout and meal is a sample built from simple rules on your quiz answers. The PRD's success metrics (quiz completion, trial-to-paid conversion, retention after the first month, adoption of AI personalisation) are not measured here, since nothing is tracked.</p>
+    </div>
+  </section>
+  <div class="phone" role="group" aria-label="Simulated fitness app screen"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  var QUESTIONS = [
+    { id: "level", t: "How would you describe your fitness level?", o: [["beginner", "Beginner", "Just starting or restarting"], ["intermediate", "Intermediate", "I work out now and then"], ["advanced", "Advanced", "I train regularly"]] },
+    { id: "time", t: "How much time can you give a workout?", o: [["15", "About 15 minutes"], ["30", "About 30 minutes"], ["45", "About 45 minutes"], ["60", "An hour or more"]] },
+    { id: "place", t: "Where do you prefer to work out?", o: [["home", "At home", "Little or no equipment"], ["gym", "At a gym", "Machines and cardio"], ["either", "Either, depends on the day"]] },
+    { id: "diet", t: "What are your diet preferences?", o: [["veg", "Vegetarian"], ["vegan", "Vegan"], ["egg", "Vegetarian with eggs"], ["nonveg", "Non-vegetarian"], ["any", "No preference"]] },
+    { id: "goal", t: "What is your main goal?", o: [["lose", "Lose weight"], ["gain", "Build muscle"], ["fit", "Get fitter and build a habit"]] },
+    { id: "pain", t: "What gets in your way the most?", o: [["time", "No time to work out"], ["consistent", "Hard to stay consistent"], ["guidance", "Not sure where to start"], ["progress", "Can't see my progress"]] },
+    { id: "days", t: "How many days a week can you train?", o: [["3", "3 days"], ["4", "4 days"], ["5", "5 days"]] },
+    { id: "med", t: "Any medical conditions or injuries we should plan around?", o: [["none", "None"], ["knee", "Knee or joint trouble"], ["back", "Back or shoulder trouble"], ["other", "Something else or not sure"]] }
+  ];
+  var LABEL = {};
+  QUESTIONS.forEach(function (q) { q.o.forEach(function (o) { LABEL[q.id + ":" + o[0]] = o[1]; }); });
+
+  var STEP_LABELS = ["Welcome", "2-minute onboarding quiz", "Sample starter plan", "14-day free trial", "Compare tiers (day 14)", "Tier confirmation", "Plan adjusts to feedback"];
+  var SCREEN_STEP = { welcome: 0, quiz: 1, plan: 2, trial: 3, tiers: 4, confirm: 5, adjust: 6 };
+
+  var TIERS = {
+    basic: { name: "Basic", price: "Free (freemium)", feats: ["Limited AI personalisation (weekly updates)", "Basic workout and diet plans", "Progress tracking"], mode: "Weekly updates (limited)", extra: "" },
+    premium: { name: "Premium", price: "About ₹100–300 / month", feats: ["Full AI personalisation (real-time)", "Unlimited plan adjustments", "Exclusive workouts and nutrition tips", "1-on-1 AI coaching"], mode: "Real-time updates", extra: "1-on-1 AI coaching is part of this tier but is not simulated here." },
+    super: { name: "Super", price: "About ₹300–500 / month", feats: ["All Premium features", "Advanced analytics and reports", "Live trainer access"], mode: "Real-time updates", extra: "Advanced analytics, reports and live trainer access are part of this tier but are not simulated here." }
+  };
+
+  function fresh() { return { screen: "welcome", q: 0, ans: {}, day: 1, teaser: false, tier: "", adj: 0, rounds: 0, fb: "", change: null, toast: "" }; }
+  var S = fresh(), lastScreen = "", lastKey = "";
+
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    ok: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#0E7C66"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+    lock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55655E" stroke-width="2" aria-hidden="true" style="flex:none"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>',
+    logo: '<svg width="76" height="76" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="38" fill="#E6F4EF"/><rect x="14" y="36" width="9" height="8" rx="2" fill="#0E7C66"/><rect x="57" y="36" width="9" height="8" rx="2" fill="#0E7C66"/><rect x="22" y="30" width="7" height="20" rx="2" fill="#0A6A50"/><rect x="51" y="30" width="7" height="20" rx="2" fill="#0A6A50"/><rect x="29" y="38" width="22" height="4" rx="2" fill="#0E7C66"/></svg>'
+  };
+  function status() { return '<div class="status"><span>9:41</span><span>5G ▮▮▮ 80</span></div>'; }
+  function hdr(title, back) {
+    return '<div class="hdr">' + (back ? '<button type="button" data-act="' + back + '" aria-label="Back" data-id="back">' + ic.back + '</button>' : '') + '<h2 class="ttl" tabindex="-1">' + title + '</h2></div>';
+  }
+  function tick(t) { return '<li>' + ic.ok + '<span>' + t + '</span></li>'; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  /* ---- Simple rules: answers -> sample plan ---- */
+  var BASE_LEVEL = { beginner: 1, intermediate: 2, advanced: 3 };
+  var BASE_MIN = { beginner: 20, intermediate: 30, advanced: 40 };
+  var INT_NAMES = ["Very light", "Light", "Moderate", "Challenging", "Hard"];
+  function planFor(adj) {
+    var a = S.ans, avail = parseInt(a.time, 10);
+    var want = BASE_MIN[a.level], notes = [];
+    notes.push("Your level is " + LABEL["level:" + a.level].toLowerCase() + ", so sessions start around " + want + " minutes.");
+    if (want > avail) { want = avail; notes.push("You have about " + avail + " minutes, so sessions are capped there."); }
+    if (a.pain === "time" && want > 20) { want = 20; notes.push("You said time is your biggest obstacle, so sessions are kept to 20 minutes."); }
+    var idx = clamp(BASE_LEVEL[a.level] + adj, 0, 4);
+    var minutes = clamp(want + 5 * adj, 10, Math.max(avail, 10));
+    var sets = idx <= 1 ? 2 : idx <= 3 ? 3 : 4, reps = 6 + 2 * idx;
+    var home = a.place !== "gym";
+    var ex;
+    if (home) ex = [["Bodyweight squats", sets + " × " + reps], ["Incline push-ups", sets + " × " + Math.max(reps - 2, 4)], ["Glute bridges", sets + " × " + reps], ["Plank", sets + " × " + (15 + 5 * idx) + " sec"]];
+    else ex = [["Leg press machine", sets + " × " + reps], ["Chest press machine", sets + " × " + reps], ["Lat pulldown machine", sets + " × " + reps], ["Treadmill or bike intervals", Math.max(minutes - 15, 5) + " min"]];
+    if (a.place === "either") notes.push("You are flexible on location, so the sample uses home exercises; swap in machines on gym days.");
+    else notes.push(home ? "Home workout, little or no equipment." : "Gym workout using machines and cardio.");
+    if (a.med === "knee") { ex[0] = [home ? "Supported sit-to-stand" : "Seated leg extension, light", sets + " × " + reps]; notes.push("Knee or joint trouble: low-impact swaps, no jumping."); }
+    if (a.med === "back") { ex[home ? 3 : 2] = [home ? "Bird-dog" : "Seated cable row, light", sets + " × " + reps]; if (home) ex[1] = ["Wall push-ups", sets + " × " + reps]; notes.push("Back or shoulder trouble: gentler pushing, pulling and core moves."); }
+    var warn = a.med === "other" ? "You told us about something else. This sample is kept gentle, and in a real app we would ask you to check with a doctor first." : (a.med !== "none" ? "This is a sample, not medical advice. Check with a doctor if unsure." : "");
+    if (a.goal === "lose") { ex.push(["Brisk walk or march on the spot", "5 min"]); notes.push("Goal is weight loss, so a short cardio finisher is added."); }
+    else if (a.goal === "gain") { ex.push(["Extra set of the first exercise", "1 set"]); notes.push("Goal is muscle gain, so one extra strength set is added."); }
+    else notes.push("Goal is a lasting habit, so the plan stays short and repeatable.");
+    var pn = { consistent: "To help with consistency, the app would send reminders on your training days.", guidance: "Each exercise would come with step-by-step guidance.", progress: "Basic progress tracking would show your sessions over time.", time: "" }[a.pain];
+    if (pn) notes.push(pn);
+    var days = { "3": ["Mon", "Wed", "Fri"], "4": ["Mon", "Tue", "Thu", "Sat"], "5": ["Mon", "Tue", "Wed", "Fri", "Sat"] }[a.days];
+    return { minutes: minutes, idx: idx, intensity: INT_NAMES[idx], sets: sets, reps: reps, ex: ex, notes: notes, warn: warn, days: days, capped: want + 5 * adj > avail };
+  }
+  var MEALS = {
+    veg: ["Vegetable poha with peanuts", "Dal, roti, sabzi and curd", "Paneer and vegetable stir-fry"],
+    vegan: ["Oats with fruit and seeds", "Chana, rice and salad", "Tofu and vegetable stir-fry"],
+    egg: ["Egg bhurji with toast", "Dal, roti, sabzi and curd", "Vegetable omelette and salad"],
+    nonveg: ["Eggs with toast", "Chicken, rice and salad", "Fish or chicken with vegetables"],
+    any: ["Oats or eggs with fruit", "Dal or chicken with rice and salad", "Light vegetable-based dinner"]
+  };
+  var MEAL_NAMES = ["Breakfast", "Lunch", "Dinner"];
+  function mealsHtml() {
+    var m = MEALS[S.ans.diet], g = S.ans.goal;
+    var tip = g === "lose" ? "Goal is weight loss: standard portions, watch the extras." : g === "gain" ? "Goal is muscle gain: include a protein source at each meal." : "Goal is a lasting habit: simple, repeatable meals.";
+    return m.map(function (x, i) { return '<div class="ex"><span>' + MEAL_NAMES[i] + '</span><span style="white-space:normal;text-align:right">' + x + '</span></div>'; }).join("") + '<p class="small" style="margin:8px 0 0">' + tip + '</p>';
+  }
+  function exHtml(p) { return p.ex.map(function (e) { return '<div class="ex"><span>' + e[0] + '</span><span>' + e[1] + '</span></div>'; }).join(""); }
+
+  /* ---- Screens ---- */
+  function welcome() {
+    return status() + '<div class="view"><div class="scroll" style="background:#fff"><div class="hero">' + ic.logo +
+      '<h2 class="ttl" tabindex="-1">A plan that fits you, before you pay</h2><p>Answer a few quick questions. Try a personalised plan free for 14 days.</p></div>' +
+      '<div class="pad"><ul class="list">' + tick("A 2-minute multiple-choice quiz") + tick("A sample plan built from your answers") + tick("14 days free, no payment in this prototype") + '</ul></div></div>' +
+      '<div class="foot"><button class="btn primary" type="button" data-act="start" data-id="main">Start the quiz</button></div></div>';
+  }
+  function quiz() {
+    var q = QUESTIONS[S.q], n = QUESTIONS.length, sel = S.ans[q.id];
+    var opts = q.o.map(function (o) {
+      return '<button type="button" class="opt" data-opt="' + o[0] + '" data-id="o' + o[0] + '" aria-pressed="' + (sel === o[0]) + '"><span class="dot" aria-hidden="true"></span><span>' + o[1] + (o[2] ? '<small>' + o[2] + '</small>' : '') + '</span></button>';
+    }).join("");
+    return status() + '<div class="view"><div class="hdr"><button type="button" data-act="qback" aria-label="Back" data-id="back">' + ic.back + '</button><span class="small" style="font-size:14px">Onboarding quiz</span></div>' +
+      '<div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="' + n + '" aria-valuenow="' + (S.q + 1) + '" aria-label="Quiz progress"><i style="width:' + Math.round((S.q + 1) / n * 100) + '%"></i></div>' +
+      '<div class="qmeta"><span>Question ' + (S.q + 1) + ' of ' + n + '</span><span>About 2 minutes</span></div>' +
+      '<div class="scroll" style="background:#fff"><div class="pad"><h2 class="ttl" tabindex="-1">' + q.t + '</h2><div class="opts" role="group" aria-label="' + q.t + '">' + opts + '</div></div></div>' +
+      '<div class="foot"><button class="btn primary" type="button" data-act="qnext" data-id="main"' + (sel ? "" : " disabled") + '>' + (S.q === n - 1 ? "See my sample plan" : "Next") + '</button></div></div>';
+  }
+  function plan() {
+    var p = planFor(0), a = S.ans;
+    return status() + '<div class="view">' + hdr("Your starter plan", "") +
+      '<div class="scroll"><div class="sec"><span class="sample">Sample plan</span><p class="sub">Built by simple rules from your quiz answers. A real app would use its AI model.</p>' +
+      '<div class="kv" style="margin-top:6px"><span>Per session</span><b>' + p.minutes + ' min</b></div><div class="kv"><span>Intensity</span><b>' + p.intensity + '</b></div><div class="kv"><span>Where</span><b>' + LABEL["place:" + a.place] + '</b></div><div class="kv"><span>Diet</span><b>' + LABEL["diet:" + a.diet] + '</b></div>' +
+      '<div class="chips" style="margin-top:8px" aria-label="Training days">' + ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(function (d) { return '<span class="' + (p.days.indexOf(d) > -1 ? "" : "off") + '">' + d + '</span>'; }).join("") + '</div></div>' +
+      '<div class="sec"><h3>Sample workout</h3>' + exHtml(p) + (p.warn ? '<div class="warnbox">' + p.warn + '</div>' : "") + '</div>' +
+      '<div class="sec"><h3>Sample meals for one day</h3>' + mealsHtml() + '</div>' +
+      '<div class="sec"><h3>Why this plan</h3><ul class="list">' + p.notes.map(function (n) { return '<li><span aria-hidden="true">•</span><span>' + n + '</span></li>'; }).join("") + '</ul></div></div>' +
+      '<div class="foot"><button class="btn primary" type="button" data-act="trial" data-id="main">Start my 14-day free trial</button></div></div>';
+  }
+  function ring(day) {
+    var r = 40, c = 2 * Math.PI * r, off = c * (1 - day / 14);
+    return '<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="Day ' + day + ' of 14"><circle cx="50" cy="50" r="' + r + '" fill="none" stroke="#DCE8E3" stroke-width="9"/><circle cx="50" cy="50" r="' + r + '" fill="none" stroke="#0E7C66" stroke-width="9" stroke-linecap="round" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" transform="rotate(-90 50 50)"/><text x="50" y="49" text-anchor="middle" font-size="22" font-weight="500" fill="#1B2A25">' + day + '</text><text x="50" y="65" text-anchor="middle" font-size="11" fill="#4F6159">of 14</text></svg>';
+  }
+  function trial() {
+    var p = planFor(0), d = S.day, bars = "";
+    for (var i = 1; i <= 14; i++) bars += '<i class="' + (i <= d ? "on" : "") + '"></i>';
+    var nextAdj = d < 8 ? "Day 8" : "Day 15, after the trial";
+    var inc = [["Basic workout routine", p.minutes + " min sample session"], ["Standard meal plan", LABEL["diet:" + S.ans.diet]], ["Limited AI adjustments", "Weekly, not real-time"], ["Basic progress tracking", "Trial days so far: " + d]];
+    var locked = ["Real-time AI personalisation", "Unlimited plan adjustments", "1-on-1 AI coaching", "Advanced analytics and reports", "Live trainer access"];
+    return status() + '<div class="view">' + hdr("Your free trial", "") +
+      '<div class="scroll"><div class="sec"><div class="dayrow">' + ring(d) + '<div><b style="font-size:17px;font-weight:500">Day ' + d + ' of 14</b><p class="sub" style="margin-top:2px">' + (14 - d) + ' day' + (14 - d === 1 ? "" : "s") + ' left in your free trial</p><span class="pill amber" style="margin-top:8px">Limited trial</span></div></div><div class="days14" aria-hidden="true">' + bars + '</div></div>' +
+      '<div class="sec"><h3>Included in your trial</h3>' + inc.map(function (f) { return '<div class="feat">' + ic.ok + '<span>' + f[0] + '<br><span class="small">' + f[1] + '</span></span></div>'; }).join("") +
+      '<div class="small" style="margin-top:8px">Next weekly AI adjustment: ' + nextAdj + '</div></div>' +
+      '<div class="sec"><button type="button" class="tease" data-act="teaser" data-id="tease" aria-expanded="' + S.teaser + '"><span>See what Premium unlocks</span><span aria-hidden="true">' + (S.teaser ? "−" : "+") + '</span></button>' +
+      (S.teaser ? '<div style="margin-top:8px">' + locked.map(function (f) { return '<div class="feat">' + ic.lock + '<span>' + f + '</span><span class="pill grey">Locked in trial</span></div>'; }).join("") + '<p class="small" style="margin:8px 0 0">Preview only. These features are part of the paid tiers in the PRD (Premium and Super) and are not active in this trial.</p></div>' : "") + '</div></div>' +
+      '<div class="foot"><button class="btn outline" type="button" data-act="nextday" data-id="main"' + (d >= 14 ? " disabled" : "") + '>Skip ahead one day</button><div class="small" style="text-align:center">Or use "Simulate day 14" on the left to jump to the end of the trial.</div></div></div>';
+  }
+  function tiers() {
+    var out = ["basic", "premium", "super"].map(function (k) {
+      var t = TIERS[k];
+      return '<div class="tier' + (k === "premium" ? " rec" : "") + '"><h3>' + t.name + (k === "basic" ? '<span class="pill grey">Freemium</span>' : "") + '</h3><div class="price">' + t.price + '</div><ul class="list">' + t.feats.map(tick).join("") + '</ul><button type="button" class="btn ' + (k === "premium" ? "primary" : "outline") + '" data-tier="' + k + '" data-id="t' + k + '">Choose ' + t.name + '</button></div>';
+    }).join("");
+    return status() + '<div class="view">' + hdr("Your trial has ended", "") +
+      '<div class="scroll"><div class="pad" style="padding-bottom:4px"><p class="sub" style="margin:0 0 14px">Day 14 of 14 reached. Choose how to continue. Prices are the approximate ranges from the PRD.</p>' + out +
+      '<p class="small" style="margin:0 0 16px">Simulated. Choosing a tier does not take any payment.</p></div></div></div>';
+  }
+  function confirm() {
+    var t = TIERS[S.tier];
+    return status() + '<div class="view"><div class="scroll" style="background:#fff"><div class="hero" style="padding-top:34px">' + ic.logo +
+      '<h2 class="ttl" tabindex="-1">You chose ' + t.name + '</h2><p>' + t.price + '</p></div>' +
+      '<div class="pad"><div class="warnbox" style="margin-top:0"><b>Simulated.</b> No payment was taken and no account was created.</div>' +
+      '<h3 style="font-size:15px;font-weight:500;margin:16px 0 8px">What this tier includes</h3><ul class="list">' + t.feats.map(tick).join("") + '</ul></div></div>' +
+      '<div class="foot"><button class="btn primary" type="button" data-act="adjust" data-id="main">See my plan adjust</button><button class="btn outline" type="button" data-act="totiers" data-id="alt">Compare tiers again</button></div></div>';
+  }
+  function adjust() {
+    var t = TIERS[S.tier], p = planFor(S.adj), c = S.change;
+    var fbs = [["hard", "Too hard"], ["right", "Just right"], ["easy", "Too easy"]];
+    var btns = fbs.map(function (f) { return '<button type="button" data-fb="' + f[0] + '" data-id="f' + f[0] + '" aria-pressed="' + (S.fb === f[0]) + '">' + f[1] + '</button>'; }).join("");
+    var res = "";
+    if (c) {
+      res = '<div class="sec" role="status" aria-live="polite"><h3>Plan updated for week ' + (S.rounds + 1) + '</h3><div class="cmp"><div><small>Before</small><b>' + c.before.minutes + ' min<br>' + c.before.intensity + '<br>' + c.before.sets + ' × ' + c.before.reps + ' reps</b></div><div class="new"><small>After</small><b>' + p.minutes + ' min<br>' + p.intensity + '<br>' + p.sets + ' × ' + p.reps + ' reps</b></div></div><div class="why">' + c.msg + '</div>' +
+        (S.tier === "basic" ? '<p class="small" style="margin:8px 0 0">On Basic, AI updates come weekly. This is shown instantly here for the demo.</p>' : '<p class="small" style="margin:8px 0 0">On ' + t.name + ', updates are real-time and plan adjustments are unlimited.</p>') + '</div>';
+    }
+    return status() + '<div class="view">' + hdr("Your plan, week " + (S.rounds + 1), "") +
+      '<div class="scroll"><div class="sec"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="sample">Sample plan</span><span class="pill green">' + t.name + ' &middot; ' + t.mode + '</span></div>' +
+      '<div class="kv" style="margin-top:8px"><span>Per session</span><b>' + p.minutes + ' min</b></div><div class="kv"><span>Intensity</span><b>' + p.intensity + '</b></div>' + exHtml(p) + (p.capped && S.adj > 0 ? '<p class="small" style="margin:6px 0 0">Capped at the time you said you have.</p>' : "") + '</div>' +
+      '<div class="sec"><h3>How did this week\'s workouts feel?</h3><p class="small" style="margin:0">Tell the app and the plan changes. Try each option.</p><div class="seg" role="group" aria-label="Workout feedback">' + btns + '</div></div>' + res +
+      '<div class="sec"><h3>In your tier</h3><ul class="list">' + t.feats.map(tick).join("") + '</ul>' + (t.extra ? '<p class="small" style="margin:8px 0 0">' + t.extra + '</p>' : "") + '</div></div>' +
+      '<div class="foot"><button class="btn outline" type="button" data-act="totiers" data-id="main">Change tier</button></div></div>';
+  }
+
+  function steps() {
+    var cur = SCREEN_STEP[S.screen];
+    document.getElementById("steps").innerHTML = STEP_LABELS.map(function (l, i) {
+      return '<li class="' + (i < cur ? "done" : i === cur ? "on" : "") + '"' + (i === cur ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + l + '</li>';
+    }).join("");
+    document.getElementById("day14").disabled = S.screen !== "trial";
+  }
+  function render() {
+    var f = { welcome: welcome, quiz: quiz, plan: plan, trial: trial, tiers: tiers, confirm: confirm, adjust: adjust }[S.screen];
+    var el = document.getElementById("app");
+    var ae = document.activeElement, keep = (ae && el.contains(ae) && ae.getAttribute("data-id")) || "";
+    var key = S.screen + (S.screen === "quiz" ? S.q : "");
+    el.innerHTML = f() + (S.toast ? '<div class="toast" role="status">' + S.toast + '</div>' : "");
+    var changed = key !== lastKey;
+    if (changed) {
+      var vw = el.querySelector(".view"); if (vw) vw.classList.add("enter");
+      var sc = el.querySelector(".scroll"); if (sc) sc.scrollTop = 0;
+      var h = el.querySelector(".ttl"); if (h && lastKey !== "") h.focus({ preventScroll: true });
+      lastKey = key;
+    } else if (keep) {
+      var n = el.querySelector('[data-id="' + keep + '"]'); if (n && !n.disabled) n.focus({ preventScroll: true });
+    }
+    lastScreen = S.screen; steps();
+  }
+  function go(s) { S.screen = s; S.toast = ""; render(); }
+
+  function applyFeedback(fb) {
+    var before = planFor(S.adj), msg;
+    S.fb = fb;
+    if (fb === "right") { msg = "You said it felt just right, so the plan stays the same this week."; }
+    else {
+      var d = fb === "hard" ? -1 : 1, next = planFor(S.adj + d);
+      var lo = BASE_LEVEL[S.ans.level] + S.adj + d;
+      if (lo < 0 || lo > 4) { msg = fb === "hard" ? "Already at the lightest sample level, so nothing more to ease off." : "Already at the hardest sample level, so nothing more to add."; }
+      else {
+        S.adj += d; S.rounds++;
+        msg = fb === "hard" ? "You said it was too hard, so the next session is shorter and a little lighter." : "You said it was too easy, so the next session steps up in intensity" + (next.minutes > before.minutes ? " and length." : (before.minutes >= parseInt(S.ans.time, 10) ? ", while staying within the time you have." : "."));
+      }
+    }
+    S.change = { before: before, msg: msg };
+    render();
+  }
+
+  var app = document.getElementById("app");
+  app.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-opt],[data-tier],[data-fb]"); if (!t) return;
+    if (t.dataset.opt) { S.ans[QUESTIONS[S.q].id] = t.dataset.opt; return render(); }
+    if (t.dataset.tier) { S.tier = t.dataset.tier; S.adj = 0; S.rounds = 0; S.fb = ""; S.change = null; return go("confirm"); }
+    if (t.dataset.fb) return applyFeedback(t.dataset.fb);
+    var a = t.dataset.act;
+    if (a === "start") { S.q = 0; return go("quiz"); }
+    if (a === "qback") { if (S.q === 0) return go("welcome"); S.q--; return render(); }
+    if (a === "qnext") { if (!S.ans[QUESTIONS[S.q].id]) return; if (S.q < QUESTIONS.length - 1) { S.q++; return render(); } return go("plan"); }
+    if (a === "trial") { S.day = 1; S.teaser = false; return go("trial"); }
+    if (a === "teaser") { S.teaser = !S.teaser; return render(); }
+    if (a === "nextday") { if (S.day < 14) S.day++; if (S.day >= 14) return go("tiers"); return render(); }
+    if (a === "totiers") return go("tiers");
+    if (a === "adjust") { S.fb = ""; S.change = null; return go("adjust"); }
+  });
+  document.getElementById("day14").addEventListener("click", function () { if (S.screen !== "trial") return; S.day = 14; go("tiers"); });
+  document.getElementById("reset").addEventListener("click", function () { S = fresh(); lastKey = ""; render(); });
+  render();
+})();
+</script>
+</body>
+</html>

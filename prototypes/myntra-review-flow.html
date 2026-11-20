@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Better reviews prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: explainer + flow steps on the left, one phone running the flow on the right.
+   Page chrome is themed; the phone screen is a fixed light concept UI (not the real app). */
+:root {
+  box-sizing: border-box;
+  --bg: #F2F7F7; --surface: #FFFFFF; --ink: #12262A; --muted: #4F6468; --line: #D3E1E2; --accent: #0E7C7B; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF4DC; --warn-ink: #7A4F00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C1A1C; --surface: #14262A; --ink: #E6F1F1; --muted: #9FB5B8; --line: #25393D; --accent: #5CD1CF; --accent-ink: #0C1A1C;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0C1A1C; --surface: #14262A; --ink: #E6F1F1; --muted: #9FB5B8; --line: #25393D; --accent: #5CD1CF; --accent-ink: #0C1A1C;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px; padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 16px; color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none; padding: 4px 0; }
+.back:hover { text-decoration: underline; }
+.top { max-width: 980px; margin: 0 auto; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 52ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn.solid { background: var(--accent); color: var(--accent-ink); }
+.pbtn:disabled { opacity: .45; cursor: not-allowed; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+:where(button, textarea, a):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #0B1A1C; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(10,30,35,.28); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #1B2A2E; }
+.screen :where(button, textarea):focus-visible { outline: 3px solid #0E7C7B; outline-offset: 2px; }
+.status { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.hdr { display: flex; align-items: center; gap: 12px; padding: 8px 14px 12px; font-size: 18px; font-weight: 500; flex: none; background: #fff; }
+.hdr button { background: none; border: 0; padding: 4px; cursor: pointer; color: #1B2A2E; display: grid; border-radius: 6px; }
+.scroll { flex: 1; overflow-y: auto; background: #F0F5F5; }
+.sec { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+.sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+.fine { font-size: 12px; color: #55686C; line-height: 1.4; }
+.item { display: flex; gap: 12px; align-items: center; }
+.item .tile { width: 56px; height: 64px; border-radius: 8px; background: #CFE6E3; display: grid; place-items: center; flex: none; }
+.item b { display: block; font-size: 15px; font-weight: 500; }
+.item small { color: #55686C; font-size: 12px; }
+.foot { padding: 12px 16px 16px; background: #fff; border-top: 1px solid #E3ECEC; display: grid; gap: 8px; flex: none; }
+.btn { font: 500 14px var(--font-app); letter-spacing: .04em; text-transform: uppercase; width: 100%; padding: 13px; border-radius: 8px; border: 1.5px solid #0E7C7B; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.primary { background: #0E7C7B; color: #fff; } .btn.outline { background: #fff; color: #0A6665; }
+.btn:disabled { background: #E6EDED; border-color: #E6EDED; color: #6A7B7E; cursor: not-allowed; }
+.btn.sm { width: auto; padding: 9px 14px; font-size: 12.5px; }
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; font-size: 14px; font-weight: 500; line-height: 1.35; }
+.banner.amber { background: #FDF1DC; } .banner.red { background: #FCE4E0; } .banner.green { background: #DDF3EA; }
+.banner small { display: block; font-weight: 400; font-size: 12.5px; color: #3E5155; margin-top: 2px; }
+.banner .row { margin-top: 8px; }
+/* nudge */
+.lock { background: linear-gradient(170deg, #12383B, #1E6E6C 60%, #3FA7A2); color: #fff; }
+.lock .status { background: transparent; color: #fff; }
+.lock .body { flex: 1; padding: 30px 16px 16px; display: flex; flex-direction: column; gap: 14px; }
+.lock .clock { text-align: center; font-size: 56px; font-weight: 300; margin-top: 20px; }
+.lock .date { text-align: center; opacity: .85; margin-top: -8px; }
+.notif { background: rgba(255,255,255,.96); color: #1B2A2E; border-radius: 16px; padding: 14px; margin-top: 46px; display: grid; gap: 10px; }
+.notif .src { font-size: 11.5px; color: #55686C; letter-spacing: .04em; text-transform: uppercase; }
+.notif b { font-size: 15px; font-weight: 500; line-height: 1.35; }
+.reward { display: inline-flex; gap: 6px; align-items: center; background: #FFF1CC; color: #6B4600; font-size: 12.5px; font-weight: 500; padding: 5px 10px; border-radius: 999px; width: fit-content; }
+/* rating */
+.rrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 0; }
+.rrow > span { font-size: 14px; }
+.rrow small { display: block; color: #55686C; font-size: 11.5px; }
+.stars { display: flex; gap: 0; }
+.stars button { background: none; border: 0; padding: 3px; cursor: pointer; color: #A9B6B8; display: grid; border-radius: 6px; }
+.stars button.on { color: #D99400; }
+.avg { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid #E3ECEC; margin-top: 6px; padding-top: 10px; }
+.avg b { font-size: 22px; font-weight: 500; }
+.cam { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid #0E7C7B; background: #fff; color: #0A6665; border-radius: 999px; padding: 8px 12px; font: 500 13px var(--font-app); cursor: pointer; }
+.cam:disabled { opacity: .45; cursor: not-allowed; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid #BCD0D1; border-radius: 999px; padding: 8px 13px; font: 400 13.5px var(--font-app); color: #0A6665; background: #fff; cursor: pointer; }
+.chip[aria-pressed="true"] { background: #DCF0EE; border-color: #0E7C7B; color: #08504F; font-weight: 500; }
+textarea { width: 100%; min-height: 110px; margin-top: 10px; border: 1.5px solid #9FB5B8; border-radius: 8px; padding: 10px; font: 400 14px/1.4 var(--font-app); color: #1B2A2E; background: #fff; resize: vertical; }
+.photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.ph { position: relative; width: 72px; height: 72px; border-radius: 8px; display: grid; place-items: center; }
+.ph button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: #1B2A2E; color: #fff; cursor: pointer; font-size: 14px; line-height: 1; display: grid; place-items: center; padding: 0; }
+.autosave { font-size: 12px; color: #55686C; display: flex; gap: 6px; align-items: center; }
+.miss { font-size: 12.5px; color: #8A3B00; }
+/* reward */
+.hero { background: #0E7C7B; color: #fff; padding: 22px 20px; text-align: center; display: grid; gap: 6px; justify-items: center; }
+.hero h2 { margin: 4px 0 0; font-size: 22px; font-weight: 500; }
+.hero p { margin: 0; font-size: 14px; line-height: 1.45; opacity: .95; }
+.kv { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; gap: 12px; }
+.kv span:first-child { color: #55686C; }
+.kv b { font-weight: 500; text-align: right; }
+.badge { display: inline-flex; gap: 8px; align-items: center; background: #FFF1CC; color: #5E3E00; border-radius: 10px; padding: 8px 12px; font-size: 13.5px; font-weight: 500; }
+.sample { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em; background: #FFF1CC; color: #6B4600; border-radius: 999px; padding: 2px 8px; vertical-align: middle; }
+.impact { display: flex; gap: 12px; }
+.impact div { flex: 1; border: 1px solid #DCE7E7; border-radius: 10px; padding: 10px 12px; }
+.impact b { font-size: 22px; font-weight: 500; display: block; }
+.impact small { color: #55686C; font-size: 12px; }
+/* reviews */
+.sumrow { display: flex; gap: 14px; align-items: center; }
+.sumrow .big { font-size: 36px; font-weight: 500; line-height: 1; }
+.bars { flex: 1; display: grid; gap: 6px; }
+.bar { display: grid; grid-template-columns: 62px 1fr 28px; gap: 8px; align-items: center; font-size: 12.5px; color: #3E5155; }
+.bar i { display: block; height: 6px; border-radius: 3px; background: #E3ECEC; position: relative; overflow: hidden; }
+.bar i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); background: #0E7C7B; border-radius: 3px; }
+.lab { font-size: 12.5px; color: #3E5155; margin: 10px 0 6px; font-weight: 500; }
+.tgl { border: 1.5px solid #9FB5B8; background: #fff; border-radius: 999px; padding: 8px 14px; font: 500 13px var(--font-app); color: #3E5155; cursor: pointer; }
+.tgl[aria-pressed="true"] { background: #0E7C7B; border-color: #0E7C7B; color: #fff; }
+.count { font-size: 12.5px; color: #55686C; padding: 8px 16px 6px; }
+.rev { background: #fff; padding: 14px 16px; margin-bottom: 8px; display: grid; gap: 8px; }
+.rev.mine { box-shadow: inset 4px 0 0 #0E7C7B; }
+.rev .who { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; }
+.rev .who small { font-weight: 400; color: #55686C; font-size: 12px; }
+.rev p { margin: 0; font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.subs { display: flex; gap: 6px; flex-wrap: wrap; }
+.subs span { font-size: 11.5px; background: #EDF3F3; color: #3E5155; padding: 3px 8px; border-radius: 6px; }
+.vf { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 500; background: #DDF3EA; color: #08583F; padding: 3px 8px; border-radius: 999px; }
+.empty { background: #fff; padding: 22px 16px; text-align: center; font-size: 14px; color: #3E5155; line-height: 1.45; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: #1B2A2E; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 4; line-height: 1.35; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } }
+</style>
+</head>
+<body>
+<div class="top"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Fashion e-commerce &middot; Product reviews</div>
+      <h1>Better reviews prototype</h1>
+      <p class="lede">This prototypes the improvement ideas from my review-feature teardown: segmented ratings, a reward for the reviewer, guided prompts, a camera button beside the rating, saved drafts, review impact, a post-delivery nudge, and Photo-only, star and Verified Fit on the reviews page. These are my proposals, not wireframes from the deck, and not the real app.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not the real app, nothing is posted</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="row">
+        <button class="pbtn" id="conn" type="button">Simulate lost connection</button>
+        <button class="pbtn solid" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Everything on screen is sample content: product, reviewer names, sizes, points, badges and counts are made up and say nothing about any real app. Photos are simulated coloured tiles, no file is read. Drafts live only in this page's memory and are lost on refresh.</p>
+    </div>
+  </section>
+  <div class="phone" role="group" aria-label="Simulated phone screen for the review concept"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  var SIZES = ["S", "M", "L", "XL"];
+  var TILES = ["#F3C9B8", "#BFD8E8", "#CFE3C2", "#E7D2F0"];
+  var PROMPTS = [
+    { id: "fit", q: "How did it fit?", s: "The fit on me: " },
+    { id: "wear", q: "Where would you wear it?", s: "I would wear it for: " },
+    { id: "listing", q: "Anything different from the listing?", s: "Compared with the listing: " }
+  ];
+  var SAMPLES = [
+    { n: "Sample reviewer A", size: "M", f: 5, c: 4, q: 5, photo: 0, t: "Sample text: Fit felt true to size on me. Fabric is fine for warm days." },
+    { n: "Sample reviewer B", size: "S", f: 4, c: 4, q: 3, photo: -1, t: "Sample text: Slightly long in the sleeves. Stitching looked average." },
+    { n: "Sample reviewer C", size: "L", f: 3, c: 4, q: 4, photo: 1, t: "Sample text: Roomy on me, comfortable all day. Photo attached." },
+    { n: "Sample reviewer D", size: "M", f: 4, c: 5, q: 4, photo: -1, t: "Sample text: Soft and easy to move in. Would wear for casual plans." },
+    { n: "Sample reviewer E", size: "XL", f: 2, c: 3, q: 3, photo: -1, t: "Sample text: Tight around the shoulders for my size." },
+    { n: "Sample reviewer F", size: "M", f: 5, c: 5, q: 5, photo: 2, t: "Sample text: Looks just like the listing photos. Photo attached." },
+    { n: "Sample reviewer G", size: "S", f: 5, c: 4, q: 4, photo: 3, t: "Sample text: Good fit for my size, colour is a touch lighter. Photo attached." },
+    { n: "Sample reviewer H", size: "L", f: 3, c: 3, q: 2, photo: -1, t: "Sample text: Fabric felt thin after a wash." }
+  ];
+  function fresh() {
+    return { screen: "nudge", f: 0, c: 0, q: 0, size: "", text: "", used: {}, photos: [], draft: null, offline: false,
+      mine: null, mySize: "M", photoOnly: false, star: "all", toast: "", pts: 0, badge: "" };
+  }
+  var S = fresh(), lastScreen = "", toastTimer = null;
+  var $app = document.getElementById("app");
+
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function avg3(r) { return (r.f + r.c + r.q) / 3; }
+  function starsOf(r) { return Math.round(avg3(r)); }
+  function hasContent() { return !!(S.f || S.c || S.q || S.size || S.text || S.photos.length); }
+
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    star: '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2 6.3 20.3l1.2-6.4L2.8 9.5l6.4-.8z"/></svg>',
+    starS: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2 6.3 20.3l1.2-6.4L2.8 9.5l6.4-.8z"/></svg>',
+    cam: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    shirt: '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2A5D5B" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l-5 3 2 4 2-1v11h10V9l2 1 2-4-5-3c-.5 1.5-1.8 2.3-4 2.3S8.500 4.500 8 3z"/></svg>',
+    check: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12.5l4.5 4.500L19 7"/></svg>',
+    warn: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="10" fill="#F5A623"/><path d="M12 7v6M12 16.500v.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>',
+    ok: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="10" fill="#0B9A75"/><path d="M7 12.500l3.200 3.200L17 9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+    gift: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M12 9v12M3 13h18M12 9c-3 0-5-3-3-4s3 1 3 4zm0 0c3 0 5-3 3-4s-3 1-3 4z"/></svg>'
+  };
+  function photoTile(i, size) {
+    var s = size || 72;
+    return '<span class="ph" style="background:' + TILES[i % TILES.length] + ';width:' + s + 'px;height:' + s + 'px" role="img" aria-label="Sample photo tile">' +
+      '<svg width="' + Math.round(s * .5) + '" height="' + Math.round(s * .5) + '" viewBox="0 0 24 24" fill="none" stroke="#2A5D5B" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l-5 3 2 4 2-1v11h10V9l2 1 2-4-5-3c-.5 1.5-1.8 2.3-4 2.3S8.500 4.500 8 3z"/></svg></span>';
+  }
+  function status(cls) { return '<div class="status"' + (cls ? ' style="color:#fff;background:transparent"' : "") + '><span>4:20</span><span>' + (S.offline ? "No signal" : "5G") + '</span></div>'; }
+  function hdr(t, back) { return '<div class="hdr">' + (back ? '<button type="button" data-act="' + back + '" aria-label="Back">' + ic.back + '</button>' : "") + '<span>' + t + '</span></div>'; }
+  function itemCard() {
+    return '<div class="item"><div class="tile">' + ic.shirt + '</div><div><b>Sample Linen Shirt</b><small>Sample brand &middot; Delivered 2 days ago (sample)</small></div></div>';
+  }
+  function starRow(key, label, hint) {
+    var v = S[key], b = "";
+    for (var n = 1; n <= 5; n++) b += '<button type="button" class="' + (n <= v ? "on" : "") + '" data-rate="' + key + '" data-v="' + n + '" aria-pressed="' + (n === v) + '" aria-label="' + label + ': ' + n + ' of 5">' + ic.star + '</button>';
+    return '<div class="rrow"><span>' + label + '<small>' + hint + '</small></span><div class="stars" role="group" aria-label="' + label + ' rating">' + b + '</div></div>';
+  }
+
+  /* screens */
+  function nudge() {
+    return '<div class="view lock">' + status(true) + '<div class="body"><div class="clock" aria-hidden="true">4:20</div><div class="date" aria-hidden="true">Sample lock screen</div>' +
+      '<div class="notif" role="group" aria-label="Sample push notification"><span class="src">Sample shopping app &middot; now</span>' +
+      '<b>How did your Sample Linen Shirt fit? Rate fit, comfort and quality in under a minute.</b>' +
+      '<span class="reward">' + ic.gift + ' Earn 50 sample points for your review</span>' +
+      '<div class="row"><button type="button" class="btn primary sm" data-act="start">Review and earn</button><button type="button" class="btn outline sm" data-act="later">Later</button></div></div>' +
+      '<p style="font-size:12.500px;opacity:.85;text-align:center;margin:auto 10px 0">Concept: a post-delivery push or email nudge that hints at a reward.</p></div></div>';
+  }
+  function home() {
+    var banner = "";
+    if (S.offline) banner += '<div class="banner red">' + ic.warn + '<div>Connection lost<small>' + (S.draft ? "Your review is saved as a draft. You can resume it when you are back online." : "Reviews can be written once you are back online.") + '</small></div></div>';
+    if (S.draft && !S.offline) banner += '<div class="banner amber">' + ic.warn + '<div>Draft saved<small>Your unfinished review of Sample Linen Shirt is waiting.</small><div class="row"><button type="button" class="btn primary sm" data-act="resume">Resume draft</button><button type="button" class="btn outline sm" data-act="discard">Discard</button></div></div></div>';
+    if (S.draft && S.offline) banner += '<div class="banner amber">' + ic.warn + '<div>Draft saved on this device<small>Resume to keep editing. Submitting needs a connection.</small><div class="row"><button type="button" class="btn primary sm" data-act="resume">Resume draft</button></div></div></div>';
+    var cta = S.mine ? '<button type="button" class="btn outline" data-act="reviews">See product reviews</button>' :
+      '<button type="button" class="btn primary" data-act="start"' + (S.offline && !S.draft ? " disabled" : "") + '>' + (S.draft ? "Continue review" : "Rate and review") + '</button>';
+    return status() + '<div class="view">' + hdr("Your orders (sample)", "") + '<div class="scroll">' + banner +
+      '<div class="sec"><h3>Delivered</h3>' + itemCard() + '<div class="fine" style="margin-top:10px">' + (S.mine ? "Reviewed. Thank you." : "Not reviewed yet. Earn 50 sample points.") + '</div></div>' +
+      '<div class="sec"><div class="fine">Concept: a leave-and-resume draft so an interrupted review is not lost.</div></div></div>' +
+      '<div class="foot">' + cta + '</div></div>';
+  }
+  function review() {
+    var done = [], miss = [];
+    if (!S.f) miss.push("fit"); if (!S.c) miss.push("comfort"); if (!S.q) miss.push("quality"); if (!S.size) miss.push("size");
+    var all = S.f && S.c && S.q;
+    var avg = all ? ((S.f + S.c + S.q) / 3).toFixed(1) : "-";
+    var chips = PROMPTS.map(function (p) { return '<button type="button" class="chip" data-chip="' + p.id + '" aria-pressed="' + !!S.used[p.id] + '">' + p.q + '</button>'; }).join("");
+    var sz = SIZES.map(function (z) { return '<button type="button" class="chip" data-size="' + z + '" aria-pressed="' + (S.size === z) + '">' + z + '</button>'; }).join("");
+    var ph = S.photos.map(function (c, i) { return '<div class="ph" style="background:' + TILES[c % TILES.length] + '" role="img" aria-label="Sample photo ' + (i + 1) + '">' + '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2A5D5B" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M8 3l-5 3 2 4 2-1v11h10V9l2 1 2-4-5-3c-.5 1.5-1.8 2.3-4 2.3S8.500 4.500 8 3z"/></svg><button type="button" data-rm="' + i + '" aria-label="Remove sample photo ' + (i + 1) + '">&times;</button></div>'; }).join("");
+    var can = all && S.size && !S.offline;
+    return status() + '<div class="view">' + hdr("Write a review", "leave") + '<div class="scroll">' +
+      '<div class="sec">' + itemCard() + '</div>' +
+      '<div class="sec"><h3>Rate it</h3>' + starRow("f", "Fit", "Did it match your size?") + starRow("c", "Comfort", "How does it feel to wear?") + starRow("q", "Quality", "Fabric and stitching") +
+      '<div class="avg"><div><small class="fine">Overall (average of the three)</small><br><b>' + avg + '</b> <span style="color:#D99400">' + ic.starS + '</span></div>' +
+      '<button type="button" class="cam" data-act="photo"' + (S.photos.length >= 3 ? " disabled" : "") + ' aria-label="Add a sample photo">' + ic.cam + ' Add photo</button></div></div>' +
+      '<div class="sec"><h3>Size you bought</h3><div class="chips" role="group" aria-label="Size you bought">' + sz + '</div><div class="fine" style="margin-top:8px">Used so other shoppers of the same size can see a Verified Fit tag.</div></div>' +
+      '<div class="sec"><h3>Guided prompts</h3><div class="fine" style="margin-bottom:8px">Tap a question to start a sentence, then finish it in your own words.</div><div class="chips">' + chips + '</div>' +
+      '<label for="rt" style="position:absolute;left:-9999px">Your review</label><textarea id="rt" placeholder="Your words (optional)">' + esc(S.text) + '</textarea></div>' +
+      '<div class="sec"><h3>Photos (' + S.photos.length + '/3)</h3>' + (ph ? '<div class="photos">' + ph + '</div>' : '<div class="fine">No photos yet. Tap Add photo above. Simulated only, no file is read.</div>') + '</div>' +
+      '</div><div class="foot">' + (S.offline ? '<div class="miss">You are offline. Save a draft and submit when back online.</div>' : (miss.length ? '<div class="miss">Still needed: ' + miss.join(", ") + '</div>' : '<div class="autosave">' + ic.ok + ' Ready to submit (sample, nothing is posted)</div>')) +
+      '<button type="button" class="btn primary" data-act="submit"' + (can ? "" : " disabled") + '>Submit review</button>' +
+      '<button type="button" class="btn outline" data-act="savedraft"' + (hasContent() ? "" : " disabled") + '>Save draft</button></div></div>';
+  }
+  function reward() {
+    var photo = S.mine && S.mine.photos.length;
+    return status() + '<div class="view"><div class="scroll"><div class="hero">' + '<svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M7.500 12.300l3 3 6-6.300" stroke="#0E7C7B" stroke-width="2.200" fill="none" stroke-linecap="round"/></svg>' +
+      '<h2>Thanks for your review</h2><p>This is a concept screen. Nothing was posted.</p></div>' +
+      '<div class="sec"><h3>Your reward <span class="sample">SAMPLE</span></h3><div class="kv"><span>Sample points</span><b>+' + S.pts + '</b></div>' +
+      '<div class="kv"><span>Sample badge</span><b><span class="badge">' + S.badge + '</span></b></div>' +
+      '<div class="kv"><span>Sample early access</span><b>Preview of a sample sale</b></div></div>' +
+      '<div class="sec"><h3>Review impact <span class="sample">SAMPLE NUMBERS</span></h3><div class="fine" style="margin-bottom:10px">Concept: once shoppers read your review you would see its reach, and whether it helped someone decide. Made-up preview:</div>' +
+      '<div class="impact"><div><b>128</b><small>shoppers saw it (sample)</small></div><div><b>9</b><small>said it helped them decide (sample)</small></div></div></div>' +
+      '<div class="sec"><div class="fine">' + (photo ? "Concept: an AI check would clear spam photos before they appear, so photo reviews stay trustworthy." : "Concept: adding a photo earns bonus sample points and helps other shoppers see the fit.") + '</div></div></div>' +
+      '<div class="foot"><button type="button" class="btn primary" data-act="reviews">See product reviews</button></div></div>';
+  }
+  function visible() {
+    var list = SAMPLES.map(function (r, i) { return { n: r.n, size: r.size, f: r.f, c: r.c, q: r.q, photos: r.photo >= 0 ? [r.photo] : [], t: r.t, mine: false }; });
+    if (S.mine) list.unshift({ n: "You (sample)", size: S.mine.size, f: S.mine.f, c: S.mine.c, q: S.mine.q, photos: S.mine.photos, t: S.mine.t || "(No written text)", mine: true });
+    return list;
+  }
+  function reviews() {
+    var all = visible(), shown = all.filter(function (r) {
+      if (S.photoOnly && !r.photos.length) return false;
+      if (S.star === "45" && starsOf(r) < 4) return false;
+      return true;
+    });
+    var n = all.length, tot = { f: 0, c: 0, q: 0 };
+    all.forEach(function (r) { tot.f += r.f; tot.c += r.c; tot.q += r.q; });
+    var af = tot.f / n, ac = tot.c / n, aq = tot.q / n, overall = (af + ac + aq) / 3;
+    function bar(l, v) { return '<div class="bar"><span>' + l + '</span><i style="--w:' + (v / 5 * 100).toFixed(0) + '%"></i><span>' + v.toFixed(1) + '</span></div>'; }
+    var same = all.filter(function (r) { return r.size === S.mySize; }).length;
+    var sz = SIZES.map(function (z) { return '<button type="button" class="chip" data-mysize="' + z + '" aria-pressed="' + (S.mySize === z) + '">' + z + '</button>'; }).join("");
+    var cards = shown.map(function (r) {
+      var vf = r.size === S.mySize ? '<span class="vf">' + ic.check + ' Verified Fit: you both wear ' + esc(S.mySize) + '</span>' : "";
+      var pics = r.photos.length ? '<div class="photos">' + r.photos.map(function (c) { return photoTile(c, 64); }).join("") + '</div>' : "";
+      var st = ""; for (var k = 1; k <= 5; k++) st += '<span style="color:' + (k <= starsOf(r) ? "#D99400" : "#C3CFD1") + '">' + ic.starS + '</span>';
+      return '<article class="rev' + (r.mine ? " mine" : "") + '"><div class="who"><span>' + esc(r.n) + '<br><small>Bought size ' + esc(r.size) + '</small></span><span role="img" aria-label="' + starsOf(r) + ' of 5 stars">' + st + '</span></div>' +
+        (vf ? '<div>' + vf + '</div>' : "") + '<div class="subs"><span>Fit ' + r.f + '</span><span>Comfort ' + r.c + '</span><span>Quality ' + r.q + '</span></div><p>' + esc(r.t) + '</p>' + pics + '</article>';
+    }).join("");
+    return status() + '<div class="view">' + hdr("Reviews (sample)", "tohome") + '<div class="scroll">' +
+      '<div class="sec"><div class="item" style="margin-bottom:12px"><div class="tile">' + ic.shirt + '</div><div><b>Sample Linen Shirt</b><small>Sample data, ' + n + ' reviews</small></div></div>' +
+      '<div class="sumrow"><div><div class="big">' + overall.toFixed(1) + '</div><div class="fine">of 5, sample</div></div><div class="bars">' + bar("Fit", af) + bar("Comfort", ac) + bar("Quality", aq) + '</div></div></div>' +
+      '<div class="sec"><div class="lab">I usually wear size</div><div class="chips" role="group" aria-label="Your size">' + sz + '</div>' +
+      '<div class="fine" style="margin-top:6px">Concept: reviews from shoppers of the same size get a Verified Fit tag. ' + same + ' of ' + n + ' sample reviews match size ' + esc(S.mySize) + '.</div>' +
+      '<div class="lab">Filter</div><div class="chips"><button type="button" class="tgl" data-star="all" aria-pressed="' + (S.star === "all") + '">All stars</button><button type="button" class="tgl" data-star="45" aria-pressed="' + (S.star === "45") + '">4-5 stars</button><button type="button" class="tgl" data-act="photoonly" aria-pressed="' + S.photoOnly + '">Photo-only</button></div></div>' +
+      '<div class="count" role="status" aria-live="polite">Showing ' + shown.length + ' of ' + n + ' sample reviews</div>' +
+      (cards || '<div class="empty">No sample reviews match these filters. Try turning one off.</div>') + '</div>' +
+      '<div class="foot"><button type="button" class="btn outline" data-act="restart">Replay the flow</button></div></div>';
+  }
+
+  var ORDER = ["nudge", "review", "draft", "reward", "reviews"];
+  var LABELS = ["Post-delivery nudge with reward hint", "Guided review: sub-ratings, prompts, photo, submit", "Save a draft, leave and resume", "Reward and review impact", "Reviews page: Photo-only, stars, Verified Fit"];
+  function stepIdx() {
+    if (S.screen === "home") return (S.draft || S.offline) ? 2 : 0;
+    return ORDER.indexOf(S.screen);
+  }
+  function steps() {
+    var idx = stepIdx();
+    document.getElementById("steps").innerHTML = LABELS.map(function (l, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + l + '</li>';
+    }).join("");
+    var c = document.getElementById("conn");
+    c.textContent = S.offline ? "Restore connection" : "Simulate lost connection";
+    c.disabled = !(S.offline || S.screen === "review" || S.screen === "home");
+  }
+  function render() {
+    var sc = $app.querySelector(".scroll"), top = sc ? sc.scrollTop : 0;
+    var act = document.activeElement, idx = -1, selStart = 0;
+    var ctrls = Array.prototype.slice.call($app.querySelectorAll("button,textarea"));
+    if (act && $app.contains(act)) { idx = ctrls.indexOf(act); selStart = act.selectionStart || 0; }
+    var f = { nudge: nudge, home: home, review: review, reward: reward, reviews: reviews }[S.screen];
+    $app.innerHTML = f() + (S.toast ? '<div class="toast" role="status">' + esc(S.toast) + '</div>' : "");
+    var same = S.screen === lastScreen;
+    if (!same) { var vw = $app.querySelector(".view"); if (vw) vw.classList.add("enter"); lastScreen = S.screen; }
+    else {
+      var ns = $app.querySelector(".scroll"); if (ns) ns.scrollTop = top;
+      if (idx >= 0) { var nc = $app.querySelectorAll("button,textarea")[idx]; if (nc) { nc.focus({ preventScroll: true }); if (nc.tagName === "TEXTAREA") nc.setSelectionRange(selStart, selStart); } }
+    }
+    steps();
+  }
+  function go(s) { S.screen = s; render(); }
+  function toast(msg) {
+    S.toast = msg; render(); clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { S.toast = ""; render(); }, 2800);
+  }
+  function snapshot() { return { f: S.f, c: S.c, q: S.q, size: S.size, text: S.text, used: JSON.parse(JSON.stringify(S.used)), photos: S.photos.slice() }; }
+  function saveDraft() { S.draft = snapshot(); }
+  function resume() {
+    var d = S.draft; if (!d) return;
+    S.f = d.f; S.c = d.c; S.q = d.q; S.size = d.size; S.text = d.text; S.used = d.used; S.photos = d.photos.slice();
+    S.draft = null; S.screen = "review"; toast("Draft restored. Pick up where you left off.");
+  }
+
+  $app.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-rate],[data-chip],[data-size],[data-rm],[data-mysize],[data-star]");
+    if (!t) return;
+    var d = t.dataset;
+    if (d.rate) { S[d.rate] = parseInt(d.v, 10); return render(); }
+    if (d.chip) {
+      if (!S.used[d.chip]) {
+        var p = PROMPTS.filter(function (x) { return x.id === d.chip; })[0];
+        S.used[d.chip] = true; S.text += (S.text && !/\n$/.test(S.text) ? "\n" : "") + p.s;
+      }
+      return render();
+    }
+    if (d.size) { S.size = d.size; return render(); }
+    if (d.rm) { S.photos.splice(parseInt(d.rm, 10), 1); return render(); }
+    if (d.mysize) { S.mySize = d.mysize; return render(); }
+    if (d.star) { S.star = d.star; return render(); }
+    switch (d.act) {
+      case "start": return go("review");
+      case "later": return go("home");
+      case "photo": if (S.photos.length < 3) { S.photos.push(S.photos.length + (S.photos.length ? S.photos[S.photos.length - 1] : 0)); } return render();
+      case "leave":
+        if (hasContent()) { saveDraft(); S.screen = "home"; return toast("Draft saved. You can resume it from your orders."); }
+        return go("home");
+      case "savedraft": saveDraft(); S.screen = "home"; return toast("Draft saved on this device (concept).");
+      case "resume": return resume();
+      case "discard": S.draft = null; return toast("Draft discarded.");
+      case "submit":
+        if (!(S.f && S.c && S.q && S.size) || S.offline) return;
+        S.mine = { f: S.f, c: S.c, q: S.q, size: S.size, t: S.text.trim(), photos: S.photos.slice() };
+        S.mySize = S.size; S.pts = 50 + (S.photos.length ? 25 : 0);
+        S.badge = S.photos.length ? "Photo Reviewer (sample badge)" : "Fit Helper (sample badge)";
+        S.draft = null; S.f = S.c = S.q = 0; S.size = ""; S.text = ""; S.used = {}; S.photos = [];
+        return go("reward");
+      case "reviews": return go("reviews");
+      case "photoonly": S.photoOnly = !S.photoOnly; return render();
+      case "tohome": return go("home");
+      case "restart": return reset();
+    }
+  });
+  $app.addEventListener("input", function (e) { if (e.target.id === "rt") S.text = e.target.value; });
+
+  function reset() { clearTimeout(toastTimer); S = fresh(); lastScreen = ""; render(); }
+  document.getElementById("reset").addEventListener("click", reset);
+  document.getElementById("conn").addEventListener("click", function () {
+    if (S.offline) { S.offline = false; return toast("Connection restored."); }
+    S.offline = true;
+    if (S.screen === "review") {
+      if (hasContent()) saveDraft();
+      S.screen = "home"; return toast("Connection lost. Your draft was saved automatically.");
+    }
+    toast("Connection lost.");
+  });
+  render();
+})();
+</script>
+</body>
+</html>

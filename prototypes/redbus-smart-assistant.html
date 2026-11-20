@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Smart Travel Assistant prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: explainer + flow steps on the left, one phone running the flow on the right.
+   Page chrome is themed; the phone screen is a fixed light app UI built from simple shapes (no brand assets). */
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  --bg: #FBF5F3; --surface: #FFFFFF; --ink: #2A1614; --muted: #6A5450; --line: #EBDAD5; --accent: #B3261E; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF4DC; --warn-ink: #7A4F00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1B1210; --surface: #271A17; --ink: #F5E8E5; --muted: #C4AAA4; --line: #43302C; --accent: #FF8A80; --accent-ink: #1B1210;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #1B1210; --surface: #271A17; --ink: #F5E8E5; --muted: #C4AAA4; --line: #43302C; --accent: #FF8A80; --accent-ink: #1B1210;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px; padding-block: 20px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 14px; color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none; border-radius: 6px; }
+.top { max-width: 980px; margin: 0 auto; }
+.back:hover { text-decoration: underline; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 52ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn:focus-visible, .app button:focus-visible, .app input:focus-visible { outline: 3px solid #1F4FD8; outline-offset: 2px; }
+.pbtn:focus-visible { outline-color: var(--accent); }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #1E1412; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(40,10,5,.3); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #25201F; }
+.screen button { font-family: var(--font-app); }
+.status { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; }
+.hdr { display: flex; align-items: center; gap: 12px; padding: 8px 14px 12px; font-size: 18px; font-weight: 500; flex: none; background: #fff; border-bottom: 1px solid #F0E4E1; }
+.hdr small { display: block; font-size: 12px; font-weight: 400; color: #6F5F5B; }
+.iconbtn { background: none; border: 0; padding: 6px; cursor: pointer; color: #25201F; display: grid; border-radius: 8px; }
+.scroll { flex: 1; overflow-y: auto; background: #F7F2F0; min-height: 0; }
+.sec { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+.sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+.foot { padding: 12px 16px 16px; background: #fff; border-top: 1px solid #F0E4E1; display: grid; gap: 10px; flex: none; }
+.btn { font: 500 14px var(--font-app); letter-spacing: .04em; text-transform: uppercase; width: 100%; padding: 13px; border-radius: 8px; border: 1.5px solid #B3261E; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.primary { background: #B3261E; color: #fff; } .btn.outline { background: #fff; color: #B3261E; }
+.btn.sm { padding: 10px; font-size: 12.5px; }
+.btn[aria-pressed="true"] { background: #FBE9E7; }
+.fine { font-size: 12px; color: #6F5F5B; line-height: 1.4; }
+.field { display: flex; flex-direction: column; border: 1px solid #E5D6D2; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: #fff; }
+.field small { color: #6F5F5B; font-size: 11.5px; }
+.field b { font-weight: 500; font-size: 17px; }
+.amber { background: #FDF1DC; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.4; margin-top: 4px; color: #4A3200; }
+.fab { position: absolute; right: 14px; bottom: 74px; background: #B3261E; color: #fff; border: 0; border-radius: 999px; padding: 12px 18px; font-size: 14px; font-weight: 500; display: flex; gap: 8px; align-items: center; cursor: pointer; box-shadow: 0 6px 16px rgba(120,20,10,.35); }
+.nav { display: flex; justify-content: space-around; padding: 10px 6px 14px; border-top: 1px solid #F0E4E1; background: #fff; font-size: 11.5px; color: #6F5F5B; flex: none; }
+.nav span { display: grid; gap: 4px; justify-items: center; }
+.nav i { width: 22px; height: 22px; border-radius: 6px; background: #E8DAD6; display: block; }
+.nav .cur { color: #B3261E; font-weight: 500; } .nav .cur i { background: #B3261E; }
+/* chat */
+.chat { flex: 1; overflow-y: auto; padding: 14px 14px 6px; background: #F7F2F0; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.msg { max-width: 88%; padding: 10px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.msg.b { background: #fff; border: 1px solid #EBDDD9; border-top-left-radius: 4px; align-self: flex-start; }
+.msg.u { background: #B3261E; color: #fff; border-top-right-radius: 4px; align-self: flex-end; }
+.msg ul { margin: 6px 0; padding-left: 18px; } .msg li { margin: 2px 0; }
+.msg p { margin: 0 0 6px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.qo { border: 1.5px solid #B3261E; background: #fff; color: #B3261E; border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; }
+.qo.solid { background: #B3261E; color: #fff; }
+.composer { display: flex; gap: 8px; padding: 10px 12px 14px; background: #fff; border-top: 1px solid #F0E4E1; flex: none; }
+.composer input { flex: 1; min-width: 0; border: 1.5px solid #D9C8C3; border-radius: 999px; padding: 11px 14px; font: 400 16px var(--font-app); color: #25201F; background: #fff; }
+.composer button { border: 0; background: #B3261E; color: #fff; border-radius: 999px; padding: 0 16px; font-weight: 500; font-size: 14px; cursor: pointer; }
+/* results */
+.tabs { display: flex; gap: 6px; padding: 10px 12px 0; background: #fff; overflow-x: auto; flex: none; scrollbar-width: none; }
+.tabs button { flex: none; border: 0; background: #F3E9E6; border-radius: 999px; padding: 8px 12px; font-size: 13px; color: #4A3935; cursor: pointer; font-weight: 500; }
+.tabs button[aria-pressed="true"] { background: #B3261E; color: #fff; }
+.sorts { display: flex; gap: 6px; padding: 10px 12px 10px; background: #fff; flex-wrap: wrap; border-bottom: 1px solid #F0E4E1; flex: none; align-items: center; }
+.sorts span { font-size: 12px; color: #6F5F5B; margin-right: 2px; }
+.sorts button { border: 1px solid #D9C8C3; background: #fff; border-radius: 999px; padding: 5px 10px; font-size: 12px; color: #4A3935; cursor: pointer; }
+.sorts button[aria-pressed="true"] { border-color: #B3261E; color: #B3261E; font-weight: 500; background: #FBE9E7; }
+.card { background: #fff; border: 1px solid #EBDDD9; border-radius: 12px; padding: 12px; margin: 10px 12px 0; }
+.card h4 { margin: 0 0 4px; font-size: 15px; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.leg { font-size: 13px; color: #3D302D; line-height: 1.5; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.pill { font-size: 11.5px; font-weight: 500; padding: 3px 9px; border-radius: 999px; background: #E6F4EC; color: #0A6B45; }
+.pill.n { background: #F0E8E5; color: #4A3935; }
+.pill.sample { background: #FDF1DC; color: #7A4F00; }
+.tot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
+.tot b { font-size: 18px; font-weight: 500; }
+.hint { padding: 12px 14px 4px; font-size: 12.5px; color: #6F5F5B; line-height: 1.4; }
+/* route card */
+.map { background: #EAF1F0; border-radius: 12px; margin: 12px 12px 0; overflow: hidden; border: 1px solid #D5E2E0; }
+.map svg { display: block; width: 100%; height: auto; }
+.amen { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.amen span { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; background: #F3EDEB; border-radius: 8px; padding: 4px 8px; color: #4A3935; }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.cmp div { border: 1px solid #EBDDD9; border-radius: 10px; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; }
+.cmp div.me { border-color: #B3261E; background: #FEF5F3; }
+.cmp b { display: block; font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.diff { margin-top: 8px; padding: 9px 11px; border-radius: 10px; font-size: 13px; background: #E6F4EC; line-height: 1.4; color: #12402B; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.success { position: absolute; inset: 0; background: #0E7A55; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; gap: 10px; z-index: 3; }
+.success h2 { margin: 6px 0 0; font-size: 22px; font-weight: 500; }
+.success p { margin: 0; font-size: 15px; line-height: 1.45; }
+.success .sum { background: rgba(255,255,255,.14); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.5; width: 100%; text-align: left; }
+.success .btn { background: #fff; color: #0E5C41; border-color: #fff; margin-top: 10px; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 90px; background: #25201F; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 4; line-height: 1.4; }
+.rob { flex: none; display: block; }
+.ah { display: flex; align-items: center; gap: 10px; padding: 6px 14px 10px; background: #fff; border-bottom: 1px solid #E7DAD6; font-size: 17px; font-weight: 500; flex: none; }
+.bub { display: flex; gap: 8px; align-items: flex-start; }
+.bub p { margin: 0; background: #fff; border-radius: 16px; padding: 10px 14px; font-size: 14px; line-height: 1.4; border: 1px solid #EBDDD9; }
+.ubub { align-self: flex-end; background: #fff; border: 1px solid #EBDDD9; border-radius: 16px; padding: 9px 22px; font-size: 14px; }
+.nlist { background: #fff; border: 1px solid #D9C8C3; margin-left: 30px; display: grid; }
+.nlist button { text-align: left; border: 0; border-bottom: 1px solid #E9DCD8; background: #fff; padding: 13px 12px; font-size: 13.5px; color: #25201F; cursor: pointer; }
+.nlist button:last-child { border-bottom: 0; }
+.nlist button[aria-pressed="true"] { background: #CFEFEA; }
+.tabs3 { display: flex; background: #fff; border-bottom: 1px solid #E7DAD6; flex: none; }
+.tabs3 span { flex: 1; display: grid; justify-items: center; gap: 3px; padding: 8px 4px; font-size: 11.5px; color: #6F5F5B; }
+.tabs3 .cur { color: #B3261E; font-weight: 500; box-shadow: inset 0 -3px 0 #B3261E; }
+.tabs3 i { width: 26px; height: 16px; border-radius: 4px; background: #9FAEBB; display: block; }
+.tabs3 .cur i { background: #B3261E; }
+.swapfield { position: relative; }
+.swap { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #B3261E; font-size: 20px; line-height: 1; }
+.tgl { display: flex; justify-content: space-between; align-items: center; border: 1px solid #E5D6D2; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; }
+.tgl i { width: 38px; height: 20px; border-radius: 999px; background: #fff; border: 2px solid #B3261E; position: relative; }
+.tgl i::after { content: ""; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #B3261E; }
+.btn.alt { background: #5B4BD4; border-color: #5B4BD4; color: #fff; }
+.btn.alt[aria-pressed="true"] { background: #43359F; }
+.cta { font-size: 13px; color: #4A3935; margin: 10px 2px 0; }
+.cta b { color: #B3261E; font-weight: 500; }
+.binfo { background: #fff; border: 1px solid #EBDDD9; border-radius: 8px; padding: 10px 12px; margin: 10px 12px 0; font-size: 13px; line-height: 1.55; }
+.chipsrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 12px 0; }
+.chipsrow span { display: flex; justify-content: center; gap: 5px; align-items: center; background: #fff; border: 1px solid #EBDDD9; border-radius: 8px; padding: 9px 4px; font-size: 12.5px; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="top"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Case study concept &middot; Bus booking</div>
+      <h1>Smart Travel Assistant</h1>
+      <p class="lede">When a destination is not directly served by buses, a traveller can ask in plain language and the assistant suggests the nearest reachable stop and bus-plus-local-ride combinations, which can be sorted by cheapest, fastest or most comfortable. This prototype walks one example trip, Bangalore to Kudremukh, from the case study.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not the real app, nothing is booked</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="row">
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Try the quick options or type something like "I want to go to Kudremukh". The two routes are the illustrative example from the case study. Bus details, amenity icons and the map are sample placeholders, not real timetables, operators, ratings or fares.</p>
+    </div>
+  </section>
+  <div class="phone" role="group" aria-label="Simulated travel app screen"><div class="screen app" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var R = {
+    1: { n: 1, via: "Chikmagalur", mode: "cab", modeName: "Local cab", leg: "Chikmagalur → Kudremukh (40 km)", hrs: "9 hours", mins: 540, fare: 850 },
+    2: { n: 2, via: "Kalasa", mode: "jeep", modeName: "Local jeep", leg: "Kalasa → Kudremukh", hrs: "8.5 hours", mins: 510, fare: 820 }
+  };
+  var QUICK = [
+    { t: "I want to go to Kudremukh", q: "I want to go to Kudremukh" },
+    { t: "Cheapest way to Kudremukh", q: "Cheapest way to Kudremukh" },
+    { t: "Fastest way to Kudremukh", q: "Fastest way to Kudremukh" },
+    { t: "I missed my bus", q: "I missed my bus" }
+  ];
+  function fresh() { return { screen: "search", msgs: [], tab: "best", sort: "best", pick: 0, compare: false, noBus: false, summary: false, toast: "" }; }
+  var S = fresh(), toastTimer = null, lastScreen = "";
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function inr(n) { return "₹" + n.toLocaleString("en-IN"); }
+
+  var ic = {
+    rob: '<svg class="rob" width="34" height="38" viewBox="0 0 34 38" aria-hidden="true"><circle cx="9" cy="3" r="2" fill="#B3261E"/><circle cx="25" cy="3" r="2" fill="#B3261E"/><path d="M9 5v5M25 5v5" stroke="#B3261E" stroke-width="2"/><rect x="3" y="10" width="28" height="22" rx="7" fill="#B3261E"/><circle cx="12" cy="20" r="3" fill="#fff"/><circle cx="22" cy="20" r="3" fill="#fff"/><rect x="11" y="26" width="12" height="2.5" rx="1.2" fill="#fff"/></svg>',
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    spark: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3L21 10l-6.8 1.7L12 18l-2.2-6.3L3 10l6.8-1.7z"/></svg>',
+    wifi: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 9a14 14 0 0 1 18 0M6 13a9 9 0 0 1 12 0M9.5 16.5a4 4 0 0 1 5 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>',
+    ac: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v20M4 7l16 10M20 7L4 17"/></svg>',
+    star: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.8 6.6 19.8l1.1-6.1L3.2 9.4l6.1-.8z"/></svg>',
+    bigok: '<svg width="64" height="64" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="#fff"/><path d="M7.5 12.3l3 3 6-6.4" stroke="#0E7A55" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+  function status() { return '<div class="status" aria-hidden="true"><span>4:20</span><span>5G &#9646;&#9646;&#9646; 72</span></div>'; }
+  function hdr(title, sub, back) {
+    return '<div class="hdr">' + (back ? '<button class="iconbtn" type="button" data-act="' + back + '" aria-label="Back">' + ic.back + '</button>' : "") +
+      '<div><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : "") + '</div></div>';
+  }
+
+  /* map: schematic only */
+  function mapSvg(pick) {
+    var via = pick ? R[pick].via : null;
+    var pts = { blr: [34, 128], chk: [150, 52], kal: [160, 112], kud: [284, 82] };
+    function node(k, label, dx, dy, on, anchor) {
+      var p = pts[k], fill = on ? "#B3261E" : "#9AA9A6";
+      return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + (on ? 7 : 5) + '" fill="' + fill + '" stroke="#fff" stroke-width="2"/>' +
+        '<text x="' + (p[0] + dx) + '" y="' + (p[1] + dy) + '" font-size="11.5" font-family="Roboto, sans-serif" fill="' + (on ? "#25201F" : "#5F6F6C") + '" font-weight="' + (on ? 700 : 400) + '" text-anchor="' + (anchor || "middle") + '">' + label + '</text>';
+    }
+    var s = '<svg viewBox="0 0 320 170" role="img" aria-label="Schematic route map, not to scale">';
+    s += '<path d="M0 150 Q70 120 120 140 T230 128 T320 140 V170 H0z" fill="#D6E6DD"/><path d="M200 0 Q230 30 260 20 T320 30 V0z" fill="#D6E6DD"/>';
+    if (pick) {
+      var v = via === "Chikmagalur" ? pts.chk : pts.kal;
+      s += '<path d="M' + pts.blr[0] + ' ' + pts.blr[1] + ' Q' + (v[0] - 50) + ' ' + (v[1] + 20) + ' ' + v[0] + ' ' + v[1] + '" fill="none" stroke="#B3261E" stroke-width="4" stroke-linecap="round"/>';
+      s += '<path d="M' + v[0] + ' ' + v[1] + ' Q' + (v[0] + 60) + ' ' + (v[1] - 10) + ' ' + pts.kud[0] + ' ' + pts.kud[1] + '" fill="none" stroke="#1F6F5C" stroke-width="4" stroke-dasharray="2 8" stroke-linecap="round"/>';
+    }
+    s += node("blr", "Bangalore", 0, 22, true) + node("chk", "Chikmagalur", 0, -12, via === "Chikmagalur") + node("kal", "Kalasa", 0, 24, via === "Kalasa") + node("kud", "Kudremukh", 0, 22, true);
+    s += '</svg>';
+    return s;
+  }
+
+  /* ---------- screens ---------- */
+  function search() {
+    return status() + '<div class="view"><div class="tabs3" aria-hidden="true"><span class="cur"><i></i>Bus tickets</span><span><i></i>Train tickets</span><span><i></i>Metro tickets</span></div>' +
+      '<div class="scroll"><div class="sec">' +
+      '<div class="field swapfield"><small>FROM:</small><b>Bangalore</b><span class="swap" aria-hidden="true">&#8645;</span></div>' +
+      '<div class="field"><small>TO:</small><b>Kudremukh</b></div>' +
+      '<div class="field"><small>Date of Journey:</small><b>Pick a date (sample)</b></div>' +
+      '<div class="tgl"><span>Booking for women</span><i aria-hidden="true"></i></div>' +
+      '<div class="row2"><button class="btn primary" type="button" data-act="search">Search Buses</button><button class="btn alt" type="button" data-act="plan">Plan my Trip</button></div>' +
+      '<div class="cta">Not sure where to go? <b>Let\u2019s help!</b></div>' +
+      (S.noBus ? '<div class="amber" role="status">No direct buses to Kudremukh. Tap <b>Plan my Trip</b> and the assistant can suggest a way to get there.</div>' : "") +
+      '</div></div>' +
+      '<button class="fab" type="button" data-act="plan" aria-label="Plan my Trip, open the Smart Assistant">' + ic.rob.replace('width="34" height="38"', 'width="22" height="24"').replace(/#B3261E/g, '#fff') + ' Plan my Trip</button>' +
+      '<div class="nav"><span class="cur"><i></i>Home</span><span><i></i>Bookings</span><span><i></i>Profile</span></div></div>';
+  }
+  function composer() {
+    return '<form class="composer" id="form" autocomplete="off"><label for="q" style="position:absolute;left:-9999px">Type any other query you have</label><input id="q" type="text" placeholder="Type any other query you have......" maxlength="120"><button type="submit">Send</button></form>';
+  }
+  function chat() {
+    return status() + '<div class="view"><div class="ah"><button class="iconbtn" type="button" data-act="back-search" aria-label="Back">' + ic.back + '</button>' + ic.rob + '<span>Smart Assistant</span></div>' +
+      '<div class="chat" id="chat" aria-live="polite">' + msgsHtml() + '</div>' + composer() + '</div>';
+  }
+  function msgsHtml() {
+    return S.msgs.map(function (m) {
+      var b = (m.btns || []).map(function (x) {
+        return '<button class="qo' + (x.solid ? " solid" : "") + '" type="button" data-act="' + x.act + '"' + (x.n ? ' data-n="' + x.n + '"' : "") + (x.v ? ' data-v="' + x.v + '"' : "") + (x.q ? ' data-q="' + esc(x.q) + '"' : "") + '>' + x.label + '</button>';
+      }).join("");
+      return '<div class="msg ' + m.who + '">' + (m.who === "u" ? esc(m.t) : m.html) + (b ? '<div class="opts">' + b + '</div>' : "") + '</div>';
+    }).join("");
+  }
+  function quickBtns() { return QUICK.map(function (x) { return { label: x.t, act: "ask", q: x.q }; }); }
+  function menuBtns() {
+    return [{ label: "1. Use Current Location", act: "menu", n: 1 }, { label: "2. Enter Destination", act: "menu", n: 2 },
+      { label: "3. Discover routes near me", act: "menu", n: 3 }, { label: "4. Show Connecting buses", act: "menu", n: 4 }];
+  }
+  function optList() {
+    return [1, 2].map(function (n) {
+      var r = R[n];
+      return '<li><b>Option ' + n + ':</b> Bus: Bangalore → ' + r.via + '; ' + r.modeName.toLowerCase() + ': ' + r.leg + '. Total: ' + r.hrs + ' | ' + inr(r.fare) + '</li>';
+    }).join("");
+  }
+  function addBot(html, btns) { S.msgs.push({ who: "b", html: html, btns: btns }); }
+  function greet() {
+    addBot("<p>Hi, Where are you headed today?</p><p class=\"fine\">Pick an option, or type a query. Examples to try:</p>", menuBtns().concat(quickBtns().slice(0, 2)));
+  }
+  function answer(text) {
+    var t = text.toLowerCase();
+    var kud = /kudre/.test(t);
+    var cheap = /cheap|budget|least|lowest/.test(t), fast = /fast|quick|shortest|earliest/.test(t), comf = /comfort/.test(t), missed = /missed|plan changed|last.?minute|alternate|alternative/.test(t);
+    if (kud || cheap || fast || comf || missed) {
+      S.sort = cheap ? "cheap" : fast ? "fast" : comf ? "comfort" : "best";
+      S.tab = cheap ? "budget" : "best";
+      var intro = kud
+        ? "We don’t have direct buses to Kudremukh. But I found the best way to reach there!"
+        : missed
+          ? "Sorry about the change of plan. This prototype only knows one sample trip, Bangalore to Kudremukh, so here are alternate ways to get there."
+          : "This prototype only knows one sample trip, Bangalore to Kudremukh. Here are the routes" + (cheap ? " with the cheapest first." : fast ? " with the fastest first." : " (comfort ratings are not part of the sample data).");
+      var spell = kud && !/kudremukh/.test(t) ? "<p class=\"fine\">I matched “Kudremukh” from what you typed (sample fuzzy matching).</p>" : "";
+      addBot("<p>" + intro + "</p>" + spell + "<ul>" + optList() + "</ul>", [
+        { label: "Choose Option 1", act: "pick", n: 1 }, { label: "Choose Option 2", act: "pick", n: 2 },
+        { label: "See all route options", act: "results", solid: true }, { label: "Edit my destination", act: "edit" }
+      ]);
+    } else {
+      addBot("<p>I’m a sample assistant, so I can only help with a few things here. Try one of these.</p>", quickBtns());
+    }
+  }
+  function ordered() {
+    var ids = [1, 2];
+    if (S.tab === "budget" || S.sort === "cheap") ids.sort(function (a, b) { return R[a].fare - R[b].fare; });
+    else if (S.sort === "fast") ids.sort(function (a, b) { return R[a].mins - R[b].mins; });
+    return ids;
+  }
+  function tagsFor(n) {
+    var o = R[n], p = [], other = R[n === 1 ? 2 : 1];
+    if (o.mins < other.mins) p.push('<span class="pill">Fastest</span>');
+    if (o.fare < other.fare) p.push('<span class="pill">Cheapest</span>');
+    return p.join("");
+  }
+  function optCard(n, detail) {
+    var r = R[n];
+    return '<div class="card"><h4><span>Option ' + n + '</span><span>' + inr(r.fare) + '</span></h4>' +
+      '<div class="badges">' + tagsFor(n) + '<span class="pill n">Bus + ' + r.mode + '</span></div>' +
+      '<div class="leg">Bus: Bangalore → ' + r.via + '<br>' + r.modeName + ': ' + r.leg + '</div>' +
+      (detail ? '<div class="leg" style="margin-top:4px">Hop 1: bus. Hop 2: ' + r.mode + '. Two legs in total.</div>' : "") +
+      '<div class="tot"><span class="fine">Total time</span><b>' + r.hrs + '</b></div>' +
+      '<button class="btn outline sm" style="margin-top:10px" type="button" data-act="pick" data-n="' + n + '">View route</button></div>';
+  }
+  function results() {
+    var names = [["best", "1. Best Match"], ["budget", "2. Budget Friendly"], ["nearest", "3. Nearest Available Stop"], ["multi", "4. Multi-hop"]];
+    var list = names.map(function (x) {
+      return '<button type="button" data-act="tab" data-v="' + x[0] + '" aria-pressed="' + (S.tab === x[0]) + '">' + x[1] + '</button>';
+    }).join("");
+    var sorts = [["best", "Default"], ["cheap", "Cheapest"], ["fast", "Fastest"], ["comfort", "Most comfortable"]].map(function (x) {
+      return '<button type="button" data-act="sort" data-v="' + x[0] + '" aria-pressed="' + (S.sort === x[0]) + '">' + x[1] + '</button>';
+    }).join("");
+    var body = "";
+    if (S.tab === "nearest") {
+      body = '<div class="hint">Kudremukh has no direct bus, so these are the nearest stops with buses from Bangalore.</div>' +
+        [1, 2].map(function (n) {
+          var r = R[n];
+          return '<div class="card"><h4><span>' + r.via + '</span><span class="pill n">Served by bus</span></h4><div class="leg">Then ' + r.modeName.toLowerCase() + ' to Kudremukh' + (n === 1 ? " (40 km)" : "") + '</div>' +
+            '<button class="btn outline sm" style="margin-top:10px" type="button" data-act="pick" data-n="' + n + '">Use this stop</button></div>';
+        }).join("");
+    } else {
+      body = (S.sort === "comfort" ? '<div class="hint">Comfort values are not part of this sample, so the order is unchanged.</div>' : "") +
+        ordered().map(function (n) { return optCard(n, S.tab === "multi"); }).join("");
+    }
+    return status() + '<div class="view"><div class="ah"><button class="iconbtn" type="button" data-act="back-chat" aria-label="Back">' + ic.back + '</button>' + ic.rob + '<span>Smart Assistant</span></div>' +
+      '<div class="scroll" style="padding:12px 0 14px"><div class="bub" style="padding:0 14px 10px">' + ic.rob.replace('width="34" height="38"', 'width="22" height="24"') + '<p>Here\u2019s what I\u2019ve found</p></div>' +
+      '<div class="nlist" role="group" aria-label="Result groups">' + list + '</div>' +
+      '<div class="sorts" role="group" aria-label="Sort" style="margin-top:12px"><span>Sort:</span>' + sorts + '</div>' + body + '</div>' + composer() + '</div>';
+  }
+  function routeCard() {
+    var n = S.pick, r = R[n], o = R[n === 1 ? 2 : 1];
+    var cmp = "";
+    if (S.compare) {
+      var dm = Math.abs(r.mins - o.mins), df = Math.abs(r.fare - o.fare);
+      var line = r.mins === o.mins && r.fare === o.fare ? "Both options match on time and fare." :
+        "Option " + n + " is " + (r.mins < o.mins ? dm + " minutes faster" : r.mins > o.mins ? dm + " minutes slower" : "the same time") + " and " + (r.fare < o.fare ? inr(df) + " cheaper" : r.fare > o.fare ? inr(df) + " dearer" : "the same fare") + " than Option " + o.n + ".";
+      cmp = '<div class="cmp">' + [r, o].map(function (x) {
+        return '<div class="' + (x.n === n ? "me" : "") + '"><b>Option ' + x.n + (x.n === n ? " (selected)" : "") + '</b>Via ' + x.via + '<br>' + x.hrs + '<br>' + inr(x.fare) + '<br>' + x.modeName + '</div>';
+      }).join("") + '</div><div class="diff">' + line + '</div>';
+    }
+    return status() + '<div class="view"><div class="ah"><button class="iconbtn" type="button" data-act="back-results" aria-label="Close, back to results">' + ic.back + '</button>' + ic.rob + '<span>How can I help you today?</span></div>' +
+      '<div class="scroll" style="padding-bottom:10px"><div class="bub" style="padding:12px 14px 0">' + ic.rob.replace('width="34" height="38"', 'width="22" height="24"') + '<p>Here are the optimized route options!!</p></div>' +
+      '<div class="map">' + mapSvg(n) + '</div><div class="fine" style="padding:4px 14px 0">Schematic sketch, not to scale. Solid line is the bus, dotted line is the local ' + r.mode + '.</div>' +
+      '<div class="binfo"><b>Option ' + n + '</b> \u00B7 via ' + r.via + ' ' + tagsFor(n) + '<br>Bus name: Intercity <span class="pill sample">Sample</span><br>Duration: ' + r.hrs + '<br>Fare: ' + inr(r.fare) + '<br>Time: sample, not shown<br><span class="fine">Then ' + r.modeName.toLowerCase() + ': ' + r.leg + '</span></div>' +
+      '<div class="chipsrow" aria-label="Sample amenity labels"><span>' + ic.ac + ' AC</span><span>' + ic.wifi + ' WIFI</span><span>' + ic.star + ' Ratings</span></div>' +
+      '<div class="fine" style="padding:6px 14px 0">AC, WIFI and Ratings are placeholders from the wireframe. No real operator, rating or amenity data.</div>' + (cmp ? '<div style="padding:0 12px">' + cmp + '</div>' : "") + '</div>' +
+      '<div class="foot"><div class="row2"><button class="btn alt" type="button" data-act="compare" aria-pressed="' + S.compare + '">' + (S.compare ? "Hide compare" : "Compare") + '</button><button class="btn primary" type="button" data-act="book">Book Now</button></div>' +
+      '<button class="btn outline sm" type="button" data-act="unsure">Still unsure?</button></div></div>';
+  }
+  function unsure() {
+    var r = R[S.pick];
+    var items = [["summary", "1. View Trip Summary", S.summary], ["rerun", "2. Rerun Search", false], ["support", "3. Talk to support", false]].map(function (x) {
+      return '<button type="button" data-act="' + x[0] + '" aria-pressed="' + x[2] + '">' + x[1] + '</button>';
+    }).join("");
+    return status() + '<div class="view"><div class="ah"><button class="iconbtn" type="button" data-act="back-card" aria-label="Back">' + ic.back + '</button>' + ic.rob + '<span>Smart Assistant</span></div>' +
+      '<div class="scroll" style="padding:14px 0"><div style="display:grid;gap:12px">' +
+      '<div class="bub" style="padding:0 14px">' + ic.rob.replace('width="34" height="38"', 'width="22" height="24"') + '<p>Still Unsure?</p></div>' +
+      '<div class="ubub" style="margin-right:14px">Yes</div>' +
+      '<div class="nlist" role="group" aria-label="Support options">' + items + '</div>' +
+      (S.summary ? '<div class="binfo" style="margin:0 14px"><b>Trip summary (sample)</b><br>Option ' + r.n + ': bus Bangalore \u2192 ' + r.via + '<br>' + r.modeName + ': ' + r.leg + '<br>Total: ' + r.hrs + ' | ' + inr(r.fare) + '</div>' : "") +
+      '<div style="padding:0 14px"><button class="btn primary sm" type="button" data-act="book">Book Now</button></div></div></div>' + composer() + '</div>';
+  }
+  function confirm() {
+    var r = R[S.pick];
+    return status() + '<div class="view"><div class="success" role="status">' + ic.bigok + '<h2>Simulated confirmation</h2>' +
+      '<p>This is a concept screen. Nothing was booked, no payment was taken and no ticket exists.</p>' +
+      '<div class="sum"><b>Option ' + r.n + '</b><br>Bus: Bangalore → ' + r.via + '<br>' + r.modeName + ': ' + r.leg + '<br>' + r.hrs + ' | ' + inr(r.fare) + '</div>' +
+      '<button class="btn" type="button" data-act="restart">Start over</button></div></div>';
+  }
+
+  var order = ["search", "chat", "results", "card", "unsure", "confirm"];
+  var labels = { search: "Search screen with Plan my Trip", chat: "Ask the Smart Assistant", results: "Here\u2019s what I\u2019ve found", card: "Route card with map", unsure: "Still Unsure?", confirm: "Simulated confirmation" };
+  function steps() {
+    var idx = order.indexOf(S.screen);
+    document.getElementById("steps").innerHTML = order.map(function (k, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + labels[k] + '</li>';
+    }).join("");
+  }
+  var VIEWS = { search: search, chat: chat, results: results, card: routeCard, unsure: unsure, confirm: confirm };
+  function render() {
+    var el = document.getElementById("app");
+    var q = document.getElementById("q"), keep = q ? q.value : "";
+    el.innerHTML = VIEWS[S.screen]() + (S.toast ? '<div class="toast" role="status">' + S.toast + '</div>' : "");
+    if (document.getElementById("chat")) { var nq = document.getElementById("q"); if (nq && keep) nq.value = keep; var c = document.getElementById("chat"); c.scrollTop = c.scrollHeight; }
+    if (S.screen !== lastScreen) { var vw = el.querySelector(".view"); if (vw) vw.classList.add("enter"); lastScreen = S.screen; }
+    steps();
+  }
+  function go(s) { S.screen = s; S.toast = ""; render(); }
+  function toast(t) { S.toast = t; render(); clearTimeout(toastTimer); toastTimer = setTimeout(function () { S.toast = ""; render(); }, 2800); }
+  function ask(text) {
+    text = text.trim(); if (!text) return;
+    S.msgs.push({ who: "u", t: text });
+    answer(text);
+    var c = document.getElementById("chat");
+    if (S.screen === "chat" && c) { c.innerHTML = msgsHtml(); c.scrollTop = c.scrollHeight; } else render();
+  }
+
+  var app = document.getElementById("app");
+  app.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act]"); if (!t) return;
+    var a = t.dataset.act, n = parseInt(t.dataset.n, 10);
+    if (a === "search") { S.noBus = true; return render(); }
+    if (a === "plan") { if (!S.msgs.length) greet(); return go("chat"); }
+    if (a === "back-search") return go("search");
+    if (a === "back-chat") return go("chat");
+    if (a === "back-results") return go("results");
+    if (a === "back-card") return go("card");
+    if (a === "menu") {
+      var m = {
+        1: ["<p>Sample only: this prototype does not read your location. Pretend you are in Bangalore. Where would you like to go?</p>", quickBtns()],
+        2: ["<p>Type where you want to go in the box below, for example \u201cI want to go to Kudremukh\u201d.</p>", quickBtns().slice(0, 1)],
+        3: ["<p>Sample: for the example trip, buses reach Chikmagalur and Kalasa, close to Kudremukh.</p>", [{ label: "3. Nearest Available Stop", act: "goto", v: "nearest", solid: true }]],
+        4: ["<p>Sample: connecting bus plus local ride combinations for the example trip.</p>", [{ label: "4. Multi-hop", act: "goto", v: "multi", solid: true }]]
+      }[n];
+      addBot(m[0], m[1]); var cc = document.getElementById("chat"); cc.innerHTML = msgsHtml(); cc.scrollTop = cc.scrollHeight; return;
+    }
+    if (a === "goto") { S.tab = t.dataset.v; S.sort = "best"; return go("results"); }
+    if (a === "ask") return ask(t.dataset.q || "");
+    if (a === "edit") { addBot("<p>Sure, where would you like to go instead?</p>", quickBtns()); var c = document.getElementById("chat"); c.innerHTML = msgsHtml(); c.scrollTop = c.scrollHeight; return; }
+    if (a === "results") return go("results");
+    if (a === "tab") { S.tab = t.dataset.v; if (S.tab === "budget") S.sort = "cheap"; else if (S.sort === "cheap") S.sort = "best"; return render(); }
+    if (a === "sort") { S.sort = t.dataset.v; return render(); }
+    if (a === "pick") { S.pick = n; S.compare = false; return go("card"); }
+    if (a === "compare") { S.compare = !S.compare; return render(); }
+    if (a === "unsure") { S.summary = false; return go("unsure"); }
+    if (a === "support") return toast("Simulated: this would open a support chat. Nothing is sent.");
+    if (a === "rerun") { addBot("<p>No problem. Let’s search again. Where would you like to go?</p>", quickBtns()); return go("chat"); }
+    if (a === "summary") { S.summary = !S.summary; return render(); }
+    if (a === "book") return go("confirm");
+    if (a === "restart") { S = fresh(); lastScreen = ""; return render(); }
+  });
+  app.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var q = document.getElementById("q"); var v = q.value; q.value = "";
+    if (!v.trim()) return;
+    if (S.screen !== "chat") { if (!S.msgs.length) greet(); S.screen = "chat"; S.toast = ""; render(); }
+    ask(v);
+  });
+  document.getElementById("reset").addEventListener("click", function () { clearTimeout(toastTimer); S = fresh(); lastScreen = ""; render(); });
+  render();
+})();
+</script>
+</body>
+</html>

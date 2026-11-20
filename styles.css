@@ -444,3 +444,5 @@ body.case-open { overflow: hidden; }
 .journey .jpanel { display: none; }
 .allxp { margin-top: var(--s2); }
 .allxp-list { margin-top: var(--s3); }
+
+.js .card.zomato:not(.wide) .card-link { margin-right: -52px; }

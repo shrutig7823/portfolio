@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Micro-cohorts prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: explainer + flow steps on the left, one phone running the flow on the right.
+   Page chrome is themed; the phone screen is a fixed light concept UI. */
+:root {
+  --bg: #F3F7F6; --surface: #FFFFFF; --ink: #14262B; --muted: #4F6168; --line: #D5E1DF; --accent: #0F766E; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF4DC; --warn-ink: #7A4F00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D1A1D; --surface: #15272B; --ink: #E6F0EE; --muted: #A6BAB6; --line: #284046; --accent: #5EEAD4; --accent-ink: #0D1A1D;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0D1A1D; --surface: #15272B; --ink: #E6F0EE; --muted: #A6BAB6; --line: #284046; --accent: #5EEAD4; --accent-ink: #0D1A1D;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px var(--font-ui); padding-block: 20px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 14px; font-weight: 700; font-size: 13px; color: var(--accent); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.topbar { max-width: 980px; margin: 0 auto; }
+a:focus-visible, .pbtn:focus-visible, .btn:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 50ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.steps li small { font-weight: 400; color: var(--muted); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #0B1A1D; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(5,25,30,.3); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #1B2A2F; }
+.status { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.hdr { display: flex; align-items: center; gap: 10px; padding: 8px 16px 10px; flex: none; background: #fff; }
+.hdr h2 { margin: 0; font-size: 18px; font-weight: 500; outline: none; overflow-wrap: anywhere; }
+.hdr h2 small { display: block; font-size: 12px; font-weight: 400; color: #55696F; }
+.hdr button { background: none; border: 0; padding: 4px; cursor: pointer; color: #1B2A2F; display: grid; border-radius: 6px; }
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; background: #F0F5F4; }
+.sec { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+.sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+.sec p { margin: 0 0 8px; font-size: 13.5px; line-height: 1.45; color: #3C5057; overflow-wrap: anywhere; }
+.fine { font-size: 12px; color: #55696F; line-height: 1.4; margin-top: 8px; overflow-wrap: anywhere; }
+.opts { display: grid; gap: 8px; }
+.opt { text-align: left; font: 400 14px var(--font-app); border: 1.5px solid #CFDDDB; background: #fff; border-radius: 10px; padding: 11px 12px; cursor: pointer; color: #1B2A2F; display: flex; gap: 10px; align-items: center; width: 100%; }
+.opt small { display: block; color: #55696F; font-size: 12px; }
+.opt b { font-weight: 500; display: block; font-size: 15px; }
+.opt[aria-pressed="true"], .opt[aria-checked="true"] { border-color: #0F766E; background: #E3F4F1; }
+.opt .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #9FB5B2; flex: none; display: grid; place-items: center; }
+.opt[aria-pressed="true"] .dot { border-color: #0F766E; background: #0F766E; }
+.opt[aria-pressed="true"] .dot::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+.opt .box { width: 20px; height: 20px; border-radius: 6px; border: 2px solid #9FB5B2; flex: none; display: grid; place-items: center; color: #fff; }
+.opt[aria-checked="true"] .box { background: #0F766E; border-color: #0F766E; }
+.opt[aria-checked="true"] .lbl { text-decoration: line-through; color: #55696F; }
+.opt .lbl { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.seg { display: flex; background: #E9F0EF; border-radius: 8px; padding: 3px; gap: 3px; margin-bottom: 10px; }
+.seg button { flex: 1; border: 0; background: transparent; padding: 8px 4px; border-radius: 6px; font: 500 13px var(--font-app); color: #3C5057; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: #fff; color: #0B5E57; box-shadow: 0 1px 3px rgba(20,40,45,.18); }
+.foot { padding: 12px 16px 14px; background: #fff; border-top: 1px solid #E1EAE9; display: grid; gap: 10px; flex: none; }
+.btn { font: 500 14.5px var(--font-app); letter-spacing: .04em; text-transform: uppercase; width: 100%; padding: 13px; border-radius: 8px; border: 1.5px solid #0F766E; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.primary { background: #0F766E; color: #fff; } .btn.outline { background: #fff; color: #0B5E57; }
+.btn:disabled { background: #E6EDEC; border-color: #E6EDEC; color: #6E8186; cursor: not-allowed; }
+.pill { font-size: 11.5px; font-weight: 500; padding: 3px 9px; border-radius: 999px; white-space: nowrap; display: inline-block; }
+.pill.q { background: #E4E9FB; color: #2B3FA8; } .pill.w { background: #FDF1DC; color: #7A4F00; } .pill.g { background: #DDF3EA; color: #0A6A4F; } .pill.s { background: #EEF1F4; color: #3C5057; }
+.av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none; color: #1B2A2F; background: #CDEAE6; }
+.av.c1 { background: #FDE2C8; } .av.c2 { background: #DCD9F7; } .av.c3 { background: #D6EBC9; } .av.c4 { background: #F7D5E3; } .av.me { background: #0F766E; color: #fff; }
+.avs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.bar { height: 10px; background: #E1EAE9; border-radius: 999px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: #0F766E; border-radius: 999px; }
+.big { font-size: 26px; font-weight: 500; }
+.ms { display: grid; gap: 10px; }
+.ms div small { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 4px; color: #3C5057; gap: 8px; }
+.ms .bar { height: 8px; }
+.ms .reached i { background: #0A8A5A; }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 13.5px; align-items: center; }
+.kv span:first-child { color: #55696F; }
+.kv b { font-weight: 500; text-align: right; }
+.post { border: 1px solid #DCE6E4; border-radius: 12px; padding: 11px 12px; margin-bottom: 10px; }
+.post .who { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 13px; }
+.post .who b { font-weight: 500; } .post .who span.pill { margin-left: auto; }
+.post p { margin: 0; font-size: 14px; line-height: 1.45; color: #1B2A2F; overflow-wrap: anywhere; }
+.reply { display: flex; gap: 8px; margin-top: 8px; padding: 8px 10px; background: #F0F5F4; border-radius: 10px; font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.reply .av { width: 24px; height: 24px; font-size: 9.5px; }
+textarea { width: 100%; font: 400 14px var(--font-app); border: 1.5px solid #9FB5B2; border-radius: 10px; padding: 10px; resize: none; color: #1B2A2F; background: #fff; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border-top: 1px solid #E1EAE9; flex: none; }
+.tabs button { background: none; border: 0; padding: 10px 4px 12px; font: 500 12px var(--font-app); color: #55696F; cursor: pointer; display: grid; justify-items: center; gap: 3px; }
+.tabs button[aria-current="page"] { color: #0B5E57; box-shadow: inset 0 3px 0 #0F766E; }
+.notif { border-radius: 16px; background: #fff; border: 1px solid #CFDDDB; box-shadow: 0 6px 18px rgba(20,40,45,.12); padding: 14px; display: flex; gap: 12px; margin: 14px 12px 6px; }
+.notif .ic { width: 38px; height: 38px; border-radius: 10px; background: #0F766E; display: grid; place-items: center; flex: none; }
+.notif b { font-weight: 500; font-size: 15px; display: block; margin: 2px 0 4px; }
+.notif p { margin: 0; font-size: 13.5px; line-height: 1.45; color: #3C5057; }
+.notif small { font-size: 11.5px; color: #55696F; }
+.hero { text-align: center; padding: 6px 16px 4px; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 76px; background: #14262B; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 4; line-height: 1.4; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } .bar i { transition: width .3s ease; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } }
+</style>
+</head>
+<body>
+<div class="topbar"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Case study concept &middot; Student-first network</div>
+      <h1>Micro-cohorts prototype</h1>
+      <p class="lede">My case study deck has no wireframes, so this prototypes the features I proposed in it: Goal-Based Micro-Cohorts, the Cohort Wall, and the Progress Tracker with Check-ins (all Must Have), plus a simple version of Smart Peer Matchmaking (Should Have). The idea: a clutter-free place to learn and build in small cohorts, with no noise, no algorithm, just real progress with real peers.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not the real app, no data is stored or sent</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps" aria-label="Flow steps"></ol>
+      <div class="row">
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">All people, posts, goals, dates and numbers are sample content made up for this demo. Members appear as initials only. Posts you write stay in this page's memory and disappear on reload. Public profile pages and recruiter access are deliberately left out, as in my Won't Have list.</p>
+    </div>
+  </section>
+  <div class="phone" role="region" aria-label="Concept phone screen"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var GOALS = {
+    resume: {
+      name: "Resume building", weeks: 3, blurb: "Turn what you have done into a clear one-page resume.",
+      tasks: ["Collect your projects and experience", "Draft a one-page resume", "Rewrite bullets to show outcomes", "Swap drafts with a peer for a read-through", "Finalise and export your resume"],
+      miles: [{ n: "Content gathered", t: [0, 1] }, { n: "Peer-reviewed draft", t: [2, 3] }, { n: "Final resume ready", t: [4] }],
+      posts: [
+        { who: "AK", c: 1, kind: "Question", text: "How do you word a class project so it does not sound like filler?", replies: [{ who: "RS", c: 2, text: "Sample reply: start with what you built, then what changed because of it." }] },
+        { who: "MP", c: 3, kind: "Win", text: "Finished my first full draft today. One page, finally.", replies: [{ who: "TN", c: 4, text: "Sample reply: nice, send it over for the swap!" }] }
+      ]
+    },
+    case: {
+      name: "Case prep", weeks: 4, blurb: "Practise structured problem solving for case interviews.",
+      tasks: ["Learn one case framework", "Solve one case on your own", "Walk a peer through your approach", "Do a timed practice case", "Write three lessons from your cases"],
+      miles: [{ n: "Framework learned", t: [0, 1] }, { n: "Practised with a peer", t: [2, 3] }, { n: "Lessons written", t: [4] }],
+      posts: [
+        { who: "RS", c: 2, kind: "Question", text: "Do you clarify the goal first or jump straight to a structure?", replies: [{ who: "AK", c: 1, text: "Sample reply: clarify first, even if it takes one minute." }] },
+        { who: "TN", c: 4, kind: "Win", text: "Solved my first timed case without freezing.", replies: [{ who: "MP", c: 3, text: "Sample reply: well done, that first one is the hardest." }] }
+      ]
+    },
+    intern: {
+      name: "Internship search", weeks: 3, blurb: "Go from a vague wish list to real, tracked applications.",
+      tasks: ["Shortlist roles you actually want", "Tailor your resume to one role", "Draft a short intro note", "Prepare three interview stories", "Log the applications you sent"],
+      miles: [{ n: "Shortlist ready", t: [0, 1] }, { n: "Materials prepared", t: [2, 3] }, { n: "Applications logged", t: [4] }],
+      posts: [
+        { who: "MP", c: 3, kind: "Question", text: "How many roles should I shortlist before I start applying?", replies: [{ who: "RS", c: 2, text: "Sample reply: a small list you can tailor to beats a long one." }] },
+        { who: "AK", c: 1, kind: "Win", text: "Sent my first tailored application this week.", replies: [{ who: "TN", c: 4, text: "Sample reply: great start, keep the momentum." }] }
+      ]
+    }
+  };
+  var ORDER = ["resume", "case", "intern"];
+  var LEVELS = ["Just starting", "Some practice", "Fairly confident"];
+  var AVAIL = ["Weekday evenings", "Weekends", "Flexible"];
+  var CI = ["On track", "Slightly behind", "Need help"];
+  var PEERS = [{ w: "AK", c: 1, n: 3 }, { w: "RS", c: 2, n: 2 }, { w: "MP", c: 3, n: 4 }, { w: "TN", c: 4, n: 1 }, { w: "SD", c: 0, n: 3 }];
+  var PEER_CI = { AK: "On track", RS: "Slightly behind", MP: "On track", TN: "Need help", SD: "On track" };
+
+  function fresh() {
+    return { screen: "goal", goal: null, level: null, avail: null, matched: "", done: [false, false, false, false, false],
+      freq: "Weekly", pick: null, checked: null, posts: [], kind: "Question", draft: "", toast: "" };
+  }
+  var S = fresh(), timer = null, lastScreen = "";
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function G() { return GOALS[S.goal]; }
+  function count() { return S.done.filter(Boolean).length; }
+
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    tick: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    chart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>',
+    wall: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    bell: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17V11a6 6 0 0112 0v6l1.5 2h-15zM10 21h4"/></svg>',
+    bellw: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17V11a6 6 0 0112 0v6l1.5 2h-15zM10 21h4"/></svg>'
+  };
+  function status() { return '<div class="status" aria-hidden="true"><span>4:20</span><span>5G ▮▮▮ 72</span></div>'; }
+  function hdr(title, back, sub) {
+    return '<div class="hdr">' + (back ? '<button type="button" data-act="' + back + '" aria-label="Back">' + ic.back + '</button>' : "") +
+      '<h2 tabindex="-1">' + title + (sub ? '<small>' + sub + '</small>' : "") + '</h2></div>';
+  }
+  function av(w, c, extra) { return '<span class="av c' + c + (extra ? " " + extra : "") + '" aria-label="Member ' + w + '">' + w + '</span>'; }
+  function tabs(cur) {
+    var t = [["dash", "Progress", ic.chart], ["wall", "Cohort Wall", ic.wall], ["nudge", "Nudge", ic.bell]];
+    return '<nav class="tabs" aria-label="Cohort sections">' + t.map(function (x) {
+      return '<button type="button" data-act="' + x[0] + '" data-fk="tab' + x[0] + '"' + (cur === x[0] ? ' aria-current="page"' : "") + '>' + x[2] + x[1] + '</button>';
+    }).join("") + '</nav>';
+  }
+
+  function goalScreen() {
+    return status() + '<div class="view">' + hdr("What do you want to get done?", "") +
+      '<div class="scroll"><div class="sec"><p>Pick one goal. You will join a small group working on the same thing, with a set timeline, tasks and milestones.</p>' +
+      '<div class="opts" role="group" aria-label="Goals">' + ORDER.map(function (k) {
+        var g = GOALS[k];
+        return '<button type="button" class="opt" data-goal="' + k + '" data-fk="g' + k + '" aria-pressed="' + (S.goal === k) + '"><span class="dot"></span><span><b>' + g.name + '</b><small>' + g.blurb + ' ' + g.weeks + ' weeks.</small></span></button>';
+      }).join("") + '</div>' +
+      '<div class="fine">Sample goals taken from the deck’s examples. No public profile, no feed.</div></div></div>' +
+      '<div class="foot"><button type="button" class="btn primary" data-act="match"' + (S.goal ? "" : " disabled") + '>Continue</button></div></div>';
+  }
+  function opts(list, key, sel) {
+    return '<div class="opts" role="group" aria-label="' + key + '">' + list.map(function (v, i) {
+      return '<button type="button" class="opt" data-' + key + '="' + i + '" data-fk="' + key + i + '" aria-pressed="' + (sel === i) + '"><span class="dot"></span><span>' + v + '</span></button>';
+    }).join("") + '</div>';
+  }
+  function matchScreen() {
+    return status() + '<div class="view">' + hdr("Find your people", "goal", "Optional step") +
+      '<div class="scroll"><div class="sec"><h3>Your level in ' + esc(G().name.toLowerCase()) + '</h3>' + opts(LEVELS, "level", S.level) + '</div>' +
+      '<div class="sec"><h3>When can you meet?</h3>' + opts(AVAIL, "avail", S.avail) +
+      '<div class="fine">The deck proposes AI matching on skill level, time zone, goal and learning style. This demo simplifies it to level and availability, and no real matching runs.</div></div></div>' +
+      '<div class="foot"><button type="button" class="btn primary" data-act="matchgo"' + (S.level !== null && S.avail !== null ? "" : " disabled") + '>Find my cohort</button>' +
+      '<button type="button" class="btn outline" data-act="skip">Skip, match on goal only</button></div></div>';
+  }
+  function joinScreen() {
+    var g = G();
+    return status() + '<div class="view">' + hdr("Your micro-cohort", "match", "Sample cohort") +
+      '<div class="scroll"><div class="sec"><h3>' + g.name + ' cohort</h3>' +
+      '<div class="kv"><span>Timeline</span><b>' + g.weeks + ' weeks</b></div><div class="kv"><span>Group size</span><b>6 people (sample)</b></div>' +
+      '<div class="kv"><span>Matched on</span><b>' + esc(S.matched) + '</b></div>' +
+      '<div class="avs" style="margin-top:6px" role="group" aria-label="Sample members">' + PEERS.map(function (p) { return av(p.w, p.c); }).join("") + av("You", 0, "me") + '</div>' +
+      '<div class="fine">Members shown as sample initials only.</div></div>' +
+      '<div class="sec"><h3>Cohort milestones</h3><ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">' + g.miles.map(function (m) { return "<li>" + m.n + "</li>"; }).join("") + '</ol></div>' +
+      '<div class="sec"><h3>Set tasks</h3><p>' + g.tasks.length + ' tasks you tick off together. Everything stays inside this private group.</p></div></div>' +
+      '<div class="foot"><button type="button" class="btn primary" data-act="join">Join this cohort</button></div></div>';
+  }
+  function dashScreen() {
+    var g = G(), n = count(), total = g.tasks.length;
+    var ms = g.miles.map(function (m) {
+      var d = m.t.filter(function (i) { return S.done[i]; }).length, pct = Math.round(d / m.t.length * 100), r = d === m.t.length;
+      return '<div class="' + (r ? "reached" : "") + '"><small><span>' + m.n + '</span><span>' + (r ? "Reached" : d + " of " + m.t.length) + '</span></small><div class="bar" role="progressbar" aria-label="' + m.n + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div></div>';
+    }).join("");
+    var tasks = g.tasks.map(function (t, i) {
+      return '<button type="button" class="opt" role="checkbox" aria-checked="' + S.done[i] + '" data-task="' + i + '" data-fk="t' + i + '"><span class="box">' + (S.done[i] ? ic.tick : "") + '</span><span class="lbl">' + t + '</span></button>';
+    }).join("");
+    var freq = ["Daily", "Weekly"].map(function (f) { return '<button type="button" data-freq="' + f + '" data-fk="f' + f + '" aria-pressed="' + (S.freq === f) + '">' + f + '</button>'; }).join("");
+    var ci = CI.map(function (v, i) { return '<button type="button" class="opt" data-ci="' + i + '" data-fk="ci' + i + '" aria-pressed="' + (S.pick === i) + '"><span class="dot"></span><span>' + v + '</span></button>'; }).join("");
+    var rows = PEERS.slice(0, 4).map(function (p) { return '<div class="kv"><span class="avs">' + av(p.w, p.c) + '</span><span class="pill s">' + PEER_CI[p.w] + '</span></div>'; }).join("") +
+      (S.checked ? '<div class="kv"><span class="avs">' + av("You", 0, "me") + '</span><span class="pill g">' + CI[S.checked.pick] + ' &middot; ' + S.checked.freq.toLowerCase() + '</span></div>' : "");
+    return status() + '<div class="view">' + hdr(esc(g.name), "", "Cohort dashboard &middot; sample") +
+      '<div class="scroll"><div class="sec"><div class="big">' + n + ' of ' + total + ' <span style="font-size:15px;color:#55696F">tasks done</span></div>' +
+      '<div class="bar" style="margin:8px 0 12px" role="progressbar" aria-label="Tasks done" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + n + '"><i style="width:' + (n / total * 100) + '%"></i></div>' +
+      '<div class="ms">' + ms + '</div></div>' +
+      '<div class="sec"><h3>Your tasks</h3><div class="opts" role="group" aria-label="Tasks">' + tasks + '</div></div>' +
+      '<div class="sec"><h3>Check-in</h3><div class="seg" role="group" aria-label="Check-in rhythm">' + freq + '</div>' +
+      '<p>' + (S.freq === "Daily" ? "How did today go?" : "How did this week go?") + '</p><div class="opts">' + ci + '</div>' +
+      '<div style="margin-top:10px"><button type="button" class="btn outline" data-act="checkin"' + (S.pick === null ? " disabled" : "") + '>Submit check-in</button></div>' +
+      '<div class="fine">Check-ins here are only visible in this demo.</div></div>' +
+      '<div class="sec"><h3>Cohort check-ins <span class="pill s">sample</span></h3>' + rows + '</div></div>' + tabs("dash") + '</div>';
+  }
+  function postHtml(p) {
+    return '<div class="post"><div class="who">' + (p.me ? av("You", 0, "me") : av(p.who, p.c)) + '<b>' + (p.me ? "You" : "Member " + p.who) + '</b><span class="pill ' + (p.kind === "Win" ? "w" : "q") + '">' + p.kind + '</span></div><p>' + esc(p.text) + '</p>' +
+      p.replies.map(function (r) { return '<div class="reply">' + av(r.who, r.c) + '<span>' + esc(r.text) + '</span></div>'; }).join("") + '</div>';
+  }
+  function wallScreen() {
+    var kinds = ["Question", "Win"].map(function (k) { return '<button type="button" data-kind="' + k + '" data-fk="k' + k + '" aria-pressed="' + (S.kind === k) + '">' + k + '</button>'; }).join("");
+    var empty = S.draft.trim() === "";
+    return status() + '<div class="view">' + hdr("Cohort Wall", "", "Private to your cohort &middot; sample posts") +
+      '<div class="scroll"><div class="sec"><div class="seg" role="group" aria-label="Post type">' + kinds + '</div>' +
+      '<label for="draft" class="fine" style="display:block;margin:0 0 6px">' + (S.kind === "Question" ? "Ask your cohort a question" : "Share a win") + '</label>' +
+      '<textarea id="draft" rows="3" maxlength="200" placeholder="' + (S.kind === "Question" ? "What are you stuck on?" : "What went well?") + '">' + esc(S.draft) + '</textarea>' +
+      '<div style="margin-top:10px"><button type="button" class="btn primary" data-act="post"' + (empty ? " disabled" : "") + '>Post to cohort</button></div>' +
+      '<div class="fine">No public audience, no likes, no feed ranking. Kept in memory only.</div></div>' +
+      '<div class="sec"><h3>Recent posts</h3>' + S.posts.map(postHtml).join("") + '</div></div>' + tabs("wall") + '</div>';
+  }
+  function nudgeScreen() {
+    var g = G(), n = count(), total = g.tasks.length, next = -1, i;
+    for (i = 0; i < total; i++) { if (!S.done[i]) { next = i; break; } }
+    var msg = next === -1 ? "All " + total + " tasks done. Every milestone is reached. Nice work." :
+      "No pressure. Your next small step: “" + esc(g.tasks[next]) + "”.";
+    return status() + '<div class="view">' + hdr("Nudges", "", "Automated and peer nudges &middot; sample") +
+      '<div class="scroll"><div class="notif"><div class="ic">' + ic.bellw + '</div><div><small>Automated nudge &middot; ' + esc(g.name) + '</small><b>' + n + ' of ' + total + ' tasks done</b><p>' + msg + '</p></div></div>' +
+      '<div class="notif"><div class="ic" style="background:#8A5CF0">' + '<span style="color:#fff;font-weight:700;font-size:13px">TN</span>' + '</div><div><small>Peer nudge &middot; sample</small><b>Member TN</b><p>Sample message: “I am doing a task tonight. Want to do one alongside me?”</p></div></div>' +
+      '<div class="sec" style="margin-top:8px"><p>Nudges are gentle and only come from your cohort or the tracker, never from strangers or ads.</p>' +
+      (n !== 2 ? '<button type="button" class="btn outline" data-act="example">Preview the 2 of 5 example</button>' : "") + '</div></div>' +
+      '<div class="foot">' + (next === -1 ? '' : '<button type="button" class="btn primary" data-act="donext">Do next task</button>') +
+      '<button type="button" class="btn outline" data-act="dash">Back to dashboard</button></div></div>';
+  }
+
+  var ORDER_SCREENS = ["goal", "match", "join", "dash", "wall", "nudge"];
+  var LABELS = ["Pick a goal", "Match by level and time (optional)", "Join a micro-cohort", "Dashboard, tracker and check-in", "Cohort Wall", "A gentle nudge"];
+  function steps() {
+    var idx = ORDER_SCREENS.indexOf(S.screen);
+    document.getElementById("steps").innerHTML = LABELS.map(function (l, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + l + '</li>';
+    }).join("");
+  }
+  function render() {
+    var el = document.getElementById("app");
+    var fk = document.activeElement && el.contains(document.activeElement) ? document.activeElement.getAttribute("data-fk") : null;
+    var sc = el.querySelector(".scroll"), top = sc ? sc.scrollTop : 0;
+    var f = { goal: goalScreen, match: matchScreen, join: joinScreen, dash: dashScreen, wall: wallScreen, nudge: nudgeScreen }[S.screen];
+    el.innerHTML = f() + (S.toast ? '<div class="toast" role="status">' + esc(S.toast) + '</div>' : "");
+    var changed = S.screen !== lastScreen;
+    if (changed) {
+      var vw = el.querySelector(".view"); if (vw) vw.classList.add("enter");
+      if (lastScreen !== "") { var h = el.querySelector("h2"); if (h) h.focus({ preventScroll: true }); }
+      lastScreen = S.screen;
+    } else {
+      var ns = el.querySelector(".scroll"); if (ns) ns.scrollTop = top;
+      if (fk) { var t = el.querySelector('[data-fk="' + fk + '"]'); if (t) t.focus({ preventScroll: true }); }
+    }
+    steps();
+  }
+  function go(s) { S.screen = s; S.toast = ""; render(); }
+  function toast(m) { S.toast = m; render(); clearTimeout(timer); timer = setTimeout(function () { S.toast = ""; render(); }, 2600); }
+
+  var app = document.getElementById("app");
+  app.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-goal],[data-level],[data-avail],[data-task],[data-freq],[data-ci],[data-kind]");
+    if (!t) return;
+    var d = t.dataset;
+    if (d.goal) { S.goal = d.goal; return render(); }
+    if (d.level !== undefined) { S.level = parseInt(d.level, 10); return render(); }
+    if (d.avail !== undefined) { S.avail = parseInt(d.avail, 10); return render(); }
+    if (d.task !== undefined) { var i = parseInt(d.task, 10); S.done[i] = !S.done[i]; return render(); }
+    if (d.freq) { S.freq = d.freq; return render(); }
+    if (d.ci !== undefined) { S.pick = parseInt(d.ci, 10); return render(); }
+    if (d.kind) { S.kind = d.kind; return render(); }
+    var a = d.act;
+    if (a === "match") return go("match");
+    if (a === "goal") return go("goal");
+    if (a === "match") return go("match");
+    if (a === "matchgo") { S.matched = "goal, " + LEVELS[S.level].toLowerCase() + ", " + AVAIL[S.avail].toLowerCase(); return go("join"); }
+    if (a === "skip") { S.matched = "goal only"; return go("join"); }
+    if (a === "join") { S.posts = G().posts.map(function (p) { return p; }); S.done = [false, false, false, false, false]; return go("dash"); }
+    if (a === "dash" || a === "wall" || a === "nudge") return go(a);
+    if (a === "checkin") { S.checked = { freq: S.freq, pick: S.pick }; return toast("Check-in saved for this demo: " + CI[S.pick] + "."); }
+    if (a === "post") {
+      var txt = S.draft.trim(); if (!txt) return;
+      var reply = S.kind === "Question" ? { who: "RS", c: 2, text: "Sample reply: happy to help. Share where you got stuck and we can go step by step." } : { who: "AK", c: 1, text: "Sample reply: well done, great progress!" };
+      S.posts.unshift({ who: "You", c: 0, me: true, kind: S.kind, text: txt, replies: [reply] });
+      S.draft = ""; return toast("Posted to your cohort wall. Demo only, not saved.");
+    }
+    if (a === "example") { S.done = [true, true, false, false, false]; return toast("Demo: first two tasks ticked."); }
+    if (a === "donext") { var j = S.done.indexOf(false); if (j > -1) S.done[j] = true; return toast("Task ticked. Nice, small steps count."); }
+  });
+  app.addEventListener("input", function (e) {
+    if (e.target.id !== "draft") return;
+    S.draft = e.target.value;
+    var b = app.querySelector('[data-act="post"]'); if (b) b.disabled = S.draft.trim() === "";
+  });
+  document.getElementById("reset").addEventListener("click", function () {
+    clearTimeout(timer); S = fresh(); lastScreen = ""; render();
+    var h = app.querySelector("h2"); if (h) h.focus({ preventScroll: true }); lastScreen = S.screen;
+  });
+  render();
+})();
+</script>
+</body>
+</html>

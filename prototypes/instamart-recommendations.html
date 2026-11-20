@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Smart recommendations prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: explainer + simulation controls on the left, one phone running the flow on the right.
+   Page chrome is themed; the phone screen is a fixed light app UI that follows the wireframes in the case study. */
+:root {
+  --bg: #F6F4F8; --surface: #FFFFFF; --ink: #24182E; --muted: #5E546B; --line: #E1DBE8; --accent: #7A2E8E; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF1D6; --warn-ink: #7F5200;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #16101C; --surface: #211829; --ink: #F0EAF6; --muted: #B5A9C4; --line: #3A2D47; --accent: #D79BEA; --accent-ink: #16101C;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #16101C; --surface: #211829; --ink: #F0EAF6; --muted: #B5A9C4; --line: #3A2D47; --accent: #D79BEA; --accent-ink: #16101C;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 14px; font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.backrow { max-width: 980px; margin: 0 auto; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 50ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.ctl { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; }
+.ctl input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.ctl input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn.solid { background: var(--accent); color: var(--accent-ink); }
+.pbtn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #1A1220; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(30,10,50,.28); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #231A2B; }
+.screen button { font-family: var(--font-app); }
+.screen button:focus-visible { outline: 3px solid #7A2E8E; outline-offset: 2px; }
+.status { height: 38px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 13px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; }
+.hdr { display: flex; align-items: center; gap: 10px; padding: 8px 14px 10px; font-size: 18px; font-weight: 500; flex: none; background: #fff; }
+.hdr .ttl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iconbtn { background: none; border: 0; padding: 4px; cursor: pointer; color: #231A2B; display: grid; border-radius: 8px; }
+.trophy { width: 40px; height: 40px; border-radius: 50%; background: #6A2BB8; border: 0; display: grid; place-items: center; cursor: pointer; flex: none; position: relative; }
+.trophy .dot { position: absolute; top: -2px; right: -2px; min-width: 18px; height: 18px; border-radius: 9px; background: #F2A516; color: #231A2B; font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0 4px; }
+.scroll { flex: 1; overflow-y: auto; background: #F4F1F7; min-height: 0; }
+.sec { background: #fff; padding: 12px 14px; margin-bottom: 8px; }
+.loc { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.mins { background: #F08A24; color: #fff; border-radius: 6px; padding: 5px 8px; text-align: center; font-weight: 700; font-size: 12px; line-height: 1.1; flex: none; }
+.loc small { color: #6F6479; font-size: 12px; display: block; }
+.loc div { min-width: 0; }
+.loc b { font-weight: 500; font-size: 15px; }
+.search { margin: 4px 14px 10px; border: 1px solid #D9D1E1; border-radius: 8px; padding: 10px 12px; color: #6F6479; font-size: 14px; background: #fff; display: flex; justify-content: space-between; }
+.hero { margin: 0 14px 12px; border-radius: 12px; background: linear-gradient(120deg, #8B2A55, #5B2A86); color: #fff; padding: 18px 16px; }
+.hero b { font-size: 20px; font-weight: 500; display: block; line-height: 1.2; }
+.hero small { font-size: 12px; opacity: .85; }
+.sh { display: flex; justify-content: space-between; padding: 6px 14px 8px; font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; color: #4A3F55; font-weight: 500; background: #fff; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0 14px 14px; background: #fff; }
+.card { position: relative; min-width: 0; }
+.card .nm { font-size: 13px; font-weight: 500; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card small { color: #6F6479; font-size: 11.5px; display: block; }
+.card .pr { font-size: 13.5px; font-weight: 500; }
+.tile { width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; display: grid; place-items: center; }
+.tile.sm { width: 48px; height: 48px; flex: none; border-radius: 8px; }
+.addb { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid #7A2E8E; background: #fff; color: #7A2E8E; font-size: 20px; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; }
+.addb.q { background: #7A2E8E; color: #fff; font-size: 14px; font-weight: 700; }
+.simbtn { margin-top: 6px; width: 100%; font-size: 12px; font-weight: 500; border: 1.5px solid #7A2E8E; color: #7A2E8E; background: #fff; border-radius: 8px; padding: 6px 4px; cursor: pointer; }
+.oosb { font-size: 11.5px; font-weight: 500; color: #9A3412; background: #FFEBDD; border-radius: 6px; padding: 3px 6px; display: inline-block; margin-top: 4px; }
+.card.oos .tile { opacity: .45; }
+.nav { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #E8E1EE; background: #fff; flex: none; padding-bottom: 6px; }
+.nav button { background: none; border: 0; padding: 8px 4px 4px; display: grid; justify-items: center; gap: 2px; font-size: 11.5px; color: #4A3F55; cursor: pointer; position: relative; }
+.nav button[aria-current="page"] { color: #7A2E8E; font-weight: 700; }
+.badge { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 17px; height: 17px; border-radius: 9px; background: #7A2E8E; color: #fff; font-size: 10.5px; display: grid; place-items: center; padding: 0 4px; }
+
+.line { display: flex; gap: 10px; align-items: center; padding: 8px 0; }
+.line + .line { border-top: 1px solid #EFEAF3; }
+.line .info { flex: 1; min-width: 0; }
+.line .info b { font-weight: 500; font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.line .info small { color: #6F6479; font-size: 12px; }
+.line.oosl .info b, .line.oosl .amt { text-decoration: line-through; color: #8B8196; }
+.amt { font-size: 14px; font-weight: 500; min-width: 44px; text-align: right; }
+.step { display: inline-flex; align-items: center; border: 1.5px solid #7A2E8E; border-radius: 8px; flex: none; }
+.step button { width: 32px; height: 32px; border: 0; background: none; color: #7A2E8E; font-size: 18px; cursor: pointer; border-radius: 6px; padding: 0; }
+.step span { min-width: 20px; text-align: center; font-size: 14px; font-weight: 500; }
+.addtxt { border: 1.5px solid #7A2E8E; color: #7A2E8E; background: #fff; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; flex: none; }
+.bar { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: #D8EEEF; color: #1B2C30; padding: 12px 14px; font-size: 14px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; cursor: pointer; text-align: left; }
+.bar.static { cursor: default; justify-content: center; }
+.hooray { display: flex; gap: 10px; align-items: center; padding: 10px 14px; background: #fff; font-size: 13.5px; margin-bottom: 8px; }
+.cup { width: 34px; height: 34px; border-radius: 50%; background: #11A394; display: grid; place-items: center; flex: none; }
+.earn { display: flex; gap: 8px; align-items: center; width: 100%; border: 1.5px solid #6A2BB8; background: #EFE7FB; color: #3A1B6B; border-radius: 8px; padding: 9px 10px; font-size: 13.5px; font-weight: 500; cursor: pointer; text-align: left; }
+.sub { background: #FFF6E0; border: 1px solid #F0D28A; border-radius: 10px; padding: 10px 12px; margin: 4px 0 8px; font-size: 13px; line-height: 1.4; }
+.sub .lbl { font-weight: 700; color: #7F5200; display: block; margin-bottom: 6px; }
+.sub .line { padding: 4px 0; }
+.sub .line + .line { border: 0; }
+.saved { background: #D8EEEF; padding: 9px 14px; font-size: 13.5px; font-weight: 500; margin-bottom: 8px; }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: 14px; }
+.kv span:first-child { color: #5E546B; }
+.kv.g b, .kv.g span:last-child { color: #0B8A6E; }
+.kv.total { border-top: 1px dashed #CFC6D8; margin-top: 4px; padding-top: 10px; font-weight: 700; font-size: 15px; }
+.kv.total span:first-child { color: #231A2B; }
+.fine { font-size: 12px; color: #6F6479; line-height: 1.4; }
+.empty { text-align: center; padding: 28px 16px; color: #6F6479; font-size: 14px; }
+.foot { padding: 10px 14px 14px; background: #fff; border-top: 1px solid #E8E1EE; display: flex; align-items: center; gap: 12px; flex: none; }
+.foot .sum { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; }
+.foot .sum small { display: block; color: #6F6479; font-size: 11.5px; font-weight: 400; }
+.btn { font: 500 14px var(--font-app); letter-spacing: .04em; text-transform: uppercase; padding: 13px 18px; border-radius: 8px; border: 1.5px solid #11897C; cursor: pointer; background: #11897C; color: #fff; flex: none; }
+.btn.full { width: 100%; }
+.btn.pay { background: #11897C; }
+.btn:disabled { background: #E7E1EC; border-color: #E7E1EC; color: #6F6479; cursor: not-allowed; }
+.scrim { position: absolute; inset: 0; background: rgba(20,10,30,.45); z-index: 5; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 82%; background: #fff; border-radius: 18px 18px 0 0; z-index: 6; display: flex; flex-direction: column; box-shadow: 0 -8px 30px rgba(0,0,0,.25); }
+.sheet .top { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 6px; font-size: 15px; font-weight: 500; }
+.sheet .body { overflow-y: auto; padding: 0 14px; min-height: 0; }
+.sheet .eta { display: flex; justify-content: space-between; border: 1px solid #DAD2E2; border-radius: 6px; padding: 8px 10px; font-size: 13.5px; margin: 4px 0 4px; }
+.sheet .bar { margin: 6px -14px; width: calc(100% + 28px); }
+.sheet .bot { padding: 8px 14px 14px; display: grid; gap: 8px; }
+.tier { display: flex; gap: 12px; align-items: center; border: 1.5px solid #E9B98E; background: #FCE9DA; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+.tier .ic { width: 44px; height: 44px; flex: none; display: grid; place-items: center; color: #6F6479; }
+.tier .tx { min-width: 0; flex: 1; font-size: 14.5px; line-height: 1.35; }
+.tier .st { display: block; font-size: 12.5px; margin-top: 4px; font-weight: 500; color: #7A4B14; }
+.tier.got { background: #DDF3EA; border-color: #7CCBAE; }
+.tier.got .st { color: #0A6B52; }
+.tier.na { background: #F1EEF4; border-color: #D6CEDF; }
+.tier.na .st { color: #5E546B; }
+.rwtitle { background: #E8D9F6; text-align: center; padding: 10px; font-size: 14px; letter-spacing: .04em; border: 1px solid #C9AEE8; }
+.unl { display: flex; gap: 12px; align-items: center; padding: 14px; font-weight: 500; font-size: 15px; line-height: 1.35; }
+.success { position: absolute; inset: 0; background: #11897C; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; gap: 10px; z-index: 8; overflow-y: auto; }
+.success h2 { margin: 6px 0 0; font-size: 22px; font-weight: 500; }
+.success p { margin: 0; font-size: 15px; line-height: 1.45; }
+.success .box { background: rgba(255,255,255,.16); border-radius: 10px; padding: 10px 14px; font-size: 14px; line-height: 1.5; width: 100%; }
+.success .btn { background: #fff; color: #0B6B61; border-color: #fff; margin-top: 8px; }
+.success .btn:focus-visible { outline-color: #fff; }
+.toast { position: absolute; left: 14px; right: 14px; bottom: 76px; background: #231A2B; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 7; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } .sheet { animation: rise .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } @keyframes rise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } } }
+</style>
+</head>
+<body>
+<div class="backrow"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Quick commerce &middot; Case study concept</div>
+      <h1>Smart recommendations at the cart</h1>
+      <p class="lede">Concept from my case study on raising order value per store. When an item is out of stock, an AI suggests a similar one. As you build a cart it also suggests add-ons, and a rewards screen shows what adding recommended items could unlock. This follows my wireframes; the items, prices and reward rules are sample values.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not the real app, no order is placed</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps" aria-label="Flow steps"></ol>
+      <label class="ctl" for="oos"><input type="checkbox" id="oos"><span>Simulate: an item in my cart (Masala puffs) is out of stock</span></label>
+      <div class="row">
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Try it: add items, then open the trophy to see the reward tiers from the wireframe. Items, prices, the delivery and handling lines, and how each reward applies are illustrative. The wireframe does not say what the 10% discount applies to; this prototype applies it to the recommended items only. Cashback is shown as paid after the order, not taken off the bill. The "9 orders" prize needs order history, so it is not simulated.</p>
+    </div>
+  </section>
+  <div class="phone" role="group" aria-label="Simulated shopping app screen"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  /* money is kept in paise (integers) so totals never drift */
+  function R(rupees) { return Math.round(rupees * 100); }
+  function fmt(p) { return "₹" + (p % 100 === 0 ? String(p / 100) : (p / 100).toFixed(2)); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  var CAT = {
+    ban:  { name: "Bananas",        size: "175 g",  p: R(30), c: "#F6D55C", shape: "curve", rec: false },
+    pump: { name: "Pumpkin seeds",  size: "100 g",  p: R(50), c: "#8FBF6A", shape: "pack",  rec: false },
+    puff: { name: "Masala puffs",   size: "80 g",   p: R(20), c: "#F29E4C", shape: "pack",  rec: false },
+    soap: { name: "Soap bar",       size: "100 g",  p: R(25), c: "#C58BE0", shape: "box",   rec: false },
+    clean:{ name: "Floor cleaner",  size: "500 ml", p: R(45), c: "#5BA7D9", shape: "bottle",rec: false },
+    bean: { name: "Green beans",    size: "250 g",  p: R(30), c: "#5FAE5B", shape: "curve", rec: false },
+    app:  { name: "Apples",         size: "80 g",   p: R(20), c: "#E5534B", shape: "round", rec: true },
+    cpuf: { name: "Corn puffs",     size: "80 g",   p: R(20), c: "#F2C14E", shape: "pack",  rec: true },
+    lyc:  { name: "Lychee",         size: "80 g",   p: R(20), c: "#E8728A", shape: "round", rec: true },
+    gra:  { name: "Grapes",         size: "80 g",   p: R(20), c: "#9BCB5A", shape: "round", rec: true },
+    nach: { name: "Nacho chips",    size: "80 g",   p: R(20), c: "#E58A3A", shape: "pack",  rec: true },
+    bisc: { name: "Cream biscuits", size: "80 g",   p: R(20), c: "#7B5A8E", shape: "box",   rec: true },
+    cola: { name: "Cola pack",      size: "2 cans", p: R(20), c: "#C73A3A", shape: "bottle",rec: true }
+  };
+  var HOME = ["ban", "pump", "puff", "soap", "clean", "bean"];
+  var SHEET_RECS = ["app", "cpuf"];
+  var PAGE_RECS = ["lyc", "gra", "nach", "bisc", "cola"];
+  var OOS_ID = "puff", SUB_ID = "cpuf";
+  var HANDLING = R(5);
+  /* reward tiers, as written on the rewards wireframe */
+  var T_DISC = 2, T_CASH_OVER = 4, T_TRIAL = 7, CASHBACK = R(50);
+
+  var S, lastScreen = "";
+  function fresh(oos) { return { screen: "home", from: "home", cart: {}, oos: !!oos, sheet: false, done: null, toast: "" }; }
+  S = fresh(false);
+  var toastTimer = null;
+
+  function isOos(id) { return S.oos && id === OOS_ID; }
+  function qty(id) { return S.cart[id] || 0; }
+  function ids() { return Object.keys(S.cart).filter(function (k) { return S.cart[k] > 0; }); }
+  function calc() {
+    var item = 0, rec = 0, recCount = 0, n = 0;
+    ids().forEach(function (id) {
+      if (isOos(id)) return;
+      var q = S.cart[id], line = CAT[id].p * q;
+      item += line; n += q;
+      if (CAT[id].rec) { rec += line; recCount += q; }
+    });
+    var disc = recCount >= T_DISC ? Math.round(rec / 10) : 0;
+    var fee = n > 0 ? HANDLING : 0;
+    return { item: item, n: n, rec: rec, recCount: recCount, disc: disc, fee: fee,
+      pay: item - disc + fee, cash: recCount > T_CASH_OVER, trial: recCount >= T_TRIAL };
+  }
+
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    cup: function (s, col) { return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="' + col + '" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z" fill="' + col + '" fill-opacity=".25"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg>'; },
+    home: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/></svg>',
+    cart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 4h3l2.5 11h9L20 8H7"/><circle cx="10" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>',
+    pct: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7A5A66" stroke-width="1.8" aria-hidden="true"><path d="M18 5L6 19"/><circle cx="7" cy="7" r="2.6"/><circle cx="17" cy="17" r="2.6"/></svg>',
+    tag: '<svg width="40" height="40" viewBox="0 0 24 24" fill="#7C8CA0" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.4" fill="#FCE9DA"/></svg>',
+    medal: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7C8CA0" stroke-width="1.8" aria-hidden="true"><path d="M7 3l5 8 5-8"/><circle cx="12" cy="15.5" r="5" fill="#7C8CA0" fill-opacity=".25"/><path d="M12 13l.8 1.6 1.7.2-1.2 1.2.3 1.7-1.6-.8-1.6.8.3-1.7-1.2-1.2 1.7-.2z"/></svg>',
+    ok: '<svg width="64" height="64" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M7.5 12.4l3 3 6-6.4" stroke="#11897C" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
+  function shapeSvg(shape, c) {
+    var d = "#fff";
+    var m = { round: '<circle cx="24" cy="25" r="14" fill="' + d + '" fill-opacity=".55"/><path d="M24 11c0-4 3-6 6-6" stroke="' + d + '" stroke-width="3" fill="none"/>',
+      curve: '<path d="M8 28c6 12 26 12 34-8-6 8-20 10-34-2z" fill="' + d + '" fill-opacity=".7"/>',
+      pack: '<rect x="12" y="8" width="24" height="32" rx="4" fill="' + d + '" fill-opacity=".6"/><rect x="16" y="18" width="16" height="10" rx="2" fill="' + d + '" fill-opacity=".8"/>',
+      box: '<rect x="8" y="14" width="32" height="22" rx="4" fill="' + d + '" fill-opacity=".6"/><rect x="14" y="21" width="20" height="4" rx="2" fill="' + d + '" fill-opacity=".85"/>',
+      bottle: '<rect x="19" y="6" width="10" height="8" rx="2" fill="' + d + '" fill-opacity=".7"/><rect x="14" y="14" width="20" height="28" rx="6" fill="' + d + '" fill-opacity=".6"/>' };
+    return '<svg viewBox="0 0 48 48" width="62%" height="62%" aria-hidden="true">' + m[shape] + '</svg>';
+  }
+  function tile(id, sm) { var it = CAT[id]; return '<div class="tile' + (sm ? " sm" : "") + '" style="background:' + it.c + '">' + shapeSvg(it.shape, it.c) + '</div>'; }
+  function status() { return '<div class="status"><span>3:03</span><span>sample</span></div>'; }
+  function hdr(t, back, extra) {
+    return '<div class="hdr">' + (back ? '<button class="iconbtn" data-act="' + back + '" data-fk="back" aria-label="Back">' + ic.back + '</button>' : "") + '<span class="ttl">' + t + '</span>' + (extra || "") + '</div>';
+  }
+  function trophyBtn(c) {
+    return '<button class="trophy" data-act="rewards" data-fk="trophy" aria-label="View rewards, ' + c.recCount + ' recommended items in cart">' + ic.cup(22, "#fff") + (c.recCount ? '<span class="dot" aria-hidden="true">' + c.recCount + '</span>' : "") + '</button>';
+  }
+
+  function stepper(id) {
+    var q = qty(id), nm = esc(CAT[id].name);
+    return '<span class="step"><button data-act="dec" data-id="' + id + '" data-fk="dec' + id + '" aria-label="Remove one ' + nm + '">&minus;</button><span aria-live="polite" aria-label="' + q + ' ' + nm + '">' + q + '</span><button data-act="inc" data-id="' + id + '" data-fk="inc' + id + '" aria-label="Add one ' + nm + '">+</button></span>';
+  }
+  function line(id, opt) {
+    opt = opt || {};
+    var it = CAT[id], q = qty(id), oos = isOos(id);
+    var right;
+    if (oos) right = '<button class="addtxt" data-act="remove" data-id="' + id + '" data-fk="rm' + id + '" aria-label="Remove ' + esc(it.name) + ' from cart">Remove</button>';
+    else if (opt.addMode && q === 0) right = '<button class="addtxt" data-act="inc" data-id="' + id + '" data-fk="inc' + id + '" aria-label="Add ' + esc(it.name) + ' to cart">Add</button>';
+    else right = stepper(id);
+    var amt = oos ? '<span class="amt">' + fmt(it.p * q) + '</span>' : '<span class="amt">' + fmt(it.p * Math.max(q, 1)) + '</span>';
+    return '<div class="line' + (oos ? " oosl" : "") + '">' + tile(id, true) + '<div class="info"><b>' + esc(it.name) + '</b><small>' + (oos ? "Out of stock" : it.size + (opt.note ? " &middot; " + opt.note : "")) + '</small></div>' + amt + right + '</div>';
+  }
+  function subCard(c) {
+    if (!(S.oos && qty(OOS_ID) > 0)) return "";
+    var q = qty(OOS_ID);
+    return '<div class="sub" role="group" aria-label="Similar item suggestion"><span class="lbl">' + esc(CAT[OOS_ID].name) + ' is out of stock. Similar items in stock:</span>' +
+      '<div class="line">' + tile(SUB_ID, true) + '<div class="info"><b>' + esc(CAT[SUB_ID].name) + '</b><small>' + CAT[SUB_ID].size + ' &middot; ' + fmt(CAT[SUB_ID].p) + ' each</small></div>' +
+      '<button class="addtxt" data-act="swap" data-fk="swap" aria-label="Swap ' + esc(CAT[OOS_ID].name) + ' for ' + esc(CAT[SUB_ID].name) + ', quantity ' + q + '">Swap</button></div></div>';
+  }
+
+  /* screens */
+  function home() {
+    var c = calc();
+    var cards = HOME.map(function (id) {
+      var it = CAT[id], oos = isOos(id), q = qty(id), btn = "";
+      if (oos) btn = '<button class="simbtn" data-act="similar" data-fk="sim' + id + '" aria-label="' + esc(it.name) + ' is out of stock. Add a similar item, ' + esc(CAT[SUB_ID].name) + '">Similar</button>';
+      else btn = '<button class="addb' + (q ? " q" : "") + '" data-act="add" data-id="' + id + '" data-fk="add' + id + '" aria-label="Add ' + esc(it.name) + (q ? ', ' + q + ' in cart' : '') + '">' + (q ? q : "+") + '</button>';
+      return '<div class="card' + (oos ? " oos" : "") + '">' + tile(id) + btn + '<div class="nm">' + esc(it.name) + '</div><small>' + it.size + '</small>' + (oos ? '<span class="oosb">Out of stock</span>' : '<div class="pr">' + fmt(it.p) + '</div>') + '</div>';
+    }).join("");
+    return status() + '<div class="view"><div class="scroll' + '" ' + (S.sheet ? "inert" : "") + '>' +
+      '<div class="sec"><div class="loc"><span class="mins">10<br>MINS</span><div><b>Delivery to sample address</b><small>Sample location, sample city</small></div></div></div>' +
+      '<div class="search" aria-hidden="true"><span>Search for items</span><span>&#9906;</span></div>' +
+      '<div class="hero"><b>Your everyday stuff, delivered fast</b><small>Sample banner</small></div>' +
+      '<div class="sh"><span>Top picks (sample)</span><span>See all</span></div><div class="grid">' + cards + '</div></div>' +
+      nav("home", c) + (S.sheet ? sheet(c) : "") + '</div>';
+  }
+  function nav(cur, c) {
+    function b(k, label, icon, extra) { return '<button data-act="' + k + '" data-fk="nav' + k + '"' + (cur === k ? ' aria-current="page"' : "") + '>' + icon + label + (extra || "") + '</button>'; }
+    return '<div class="nav">' + b("home", "Home", ic.home) + b("cart", "Cart", ic.cart, c.n ? '<span class="badge" aria-label="' + c.n + ' items">' + c.n + '</span>' : "") + b("rewards", "Rewards", ic.cup(22, "currentColor")) + '</div>';
+  }
+  function sheet(c) {
+    var lines = ids().map(function (id) { return line(id); }).join("");
+    var recs = SHEET_RECS.map(function (id) { return line(id, { addMode: true, note: id === SUB_ID && S.oos && qty(OOS_ID) > 0 ? "similar to " + esc(CAT[OOS_ID].name) : "" }); }).join("");
+    return '<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Review items"><div class="top"><span>Review items</span><button class="iconbtn" data-act="closeSheet" data-fk="closeSheet" aria-label="Close">' + ic.x + '</button></div>' +
+      '<div class="body"><div class="eta"><span>Delivery in 9 mins</span><span>' + c.n + ' item' + (c.n === 1 ? "" : "s") + '</span></div>' + lines + subCard(c) +
+      '<button class="bar" data-act="recs" data-fk="recsbar">Recommendations <span aria-hidden="true">&rarr;</span></button>' + recs +
+      '<div style="padding:8px 0"><button class="earn" data-act="rewards" data-fk="earn">' + ic.cup(24, "#6A2BB8") + '<span>Earn rewards by adding similar products</span></button></div></div>' +
+      '<div class="bot"><button class="btn full" data-act="cart" data-fk="gocart">Go to cart' + (c.n ? " &middot; " + fmt(c.item) : "") + '</button></div></div>';
+  }
+  function recs() {
+    var c = calc();
+    var rows = PAGE_RECS.map(function (id) { return line(id, { addMode: true }); }).join("");
+    return status() + '<div class="view">' + hdr("Add to your cart", "home", trophyBtn(c)) +
+      '<div class="scroll"><button class="bar static" tabindex="-1" disabled style="opacity:1;color:#1B2C30">Recommendations</button>' +
+      '<div class="sec">' + rows + '</div>' +
+      '<div class="hooray"><span class="cup">' + ic.cup(20, "#fff") + '</span><span><b>Hooray! FREE DELIVERY unlocked!</b><br><span class="fine">As shown in the wireframe; the rule that unlocks it is not defined, so delivery is simply free here.</span></span></div></div>' +
+      '<div class="foot"><div class="sum">Items | ' + fmt(c.item) + '<small>' + c.n + ' item' + (c.n === 1 ? "" : "s") + ' in cart</small></div><button class="btn" data-act="cart" data-fk="gocart2">Go to cart</button></div></div>';
+  }
+  function cart() {
+    var c = calc(), has = ids().length > 0;
+    var lines = ids().map(function (id) { return line(id); }).join("");
+    var more = Object.keys(CAT).filter(function (id) { return CAT[id].rec && qty(id) === 0 && !(id === SUB_ID && S.oos && qty(OOS_ID) > 0); }).slice(0, 4);
+    var recHtml = more.map(function (id) { return line(id, { addMode: true }); }).join("");
+    var saved = c.disc > 0 ? '<div class="saved" role="status">' + fmt(c.disc) + ' saved on this order</div>' : "";
+    var bill = !has ? "" :
+      '<div class="sec"><b style="font-size:15px;font-weight:500">Bill details</b>' +
+      '<div class="kv"><span>Item total</span><span>' + fmt(c.item) + '</span></div>' +
+      (c.disc > 0 ? '<div class="kv g"><span>Recommended-item discount (10%)</span><span>&minus;' + fmt(c.disc) + '</span></div>' : "") +
+      '<div class="kv"><span>Handling fee</span><span>' + fmt(c.fee) + '</span></div>' +
+      '<div class="kv g"><span>Delivery partner fee</span><span>FREE</span></div>' +
+      '<div class="kv total"><span>To pay</span><span>' + fmt(c.pay) + '</span></div>' +
+      (c.cash ? '<div class="fine" style="margin-top:6px">Plus ' + fmt(CASHBACK) + ' cashback after the order (not deducted from this bill).</div>' : "") +
+      (c.trial ? '<div class="fine" style="margin-top:4px">1 day free trial unlocked.</div>' : "") +
+      '<div class="fine" style="margin-top:8px">All prices and fees are sample values.</div></div>';
+    return status() + '<div class="view">' + hdr("Your cart", "home", trophyBtn(c)) +
+      '<div class="scroll">' + saved +
+      (has ? '<div class="sec"><div class="kv" style="padding-top:0"><span>Delivery in 10 mins</span><span>' + c.n + ' item' + (c.n === 1 ? "" : "s") + '</span></div>' + lines + subCard(c) + '<div style="padding-top:6px"><button class="addtxt" data-act="home" data-fk="more" style="width:100%">Missed something? Add more items</button></div></div>' : '<div class="sec empty">Your cart is empty.<br><br><button class="addtxt" data-act="home" data-fk="more">Browse items</button></div>') +
+      '<div class="sec"><button class="earn" data-act="rewards" data-fk="earn" style="margin-bottom:8px">' + ic.cup(24, "#6A2BB8") + '<span>' + (c.recCount ? c.recCount + " recommended item" + (c.recCount === 1 ? "" : "s") + " in your cart. See rewards" : "Earn rewards by adding recommended items") + '</span></button>' +
+      '<b style="font-size:15px;font-weight:500">Recommended for you</b><div class="fine" style="margin-bottom:4px">Picks chosen by AI, only items that are in stock (sample list).</div>' + (recHtml || '<div class="fine">All sample recommendations are in your cart.</div>') + '</div>' +
+      bill + '</div>' +
+      '<div class="foot"><div class="sum">' + (has ? "To pay " + fmt(c.pay) : "No items") + '<small>Simulated, no payment is made</small></div><button class="btn pay" data-act="pay" data-fk="pay"' + (c.n ? "" : " disabled") + '>Pay ' + (c.n ? fmt(c.pay) : "") + '</button></div></div>';
+  }
+  function rewards() {
+    var c = calc(), n = c.recCount;
+    function tier(icon, text, got, prog) { return '<div class="tier' + (got ? " got" : "") + '"><div class="ic">' + icon + '</div><div class="tx">' + text + '<span class="st">' + (got ? "Unlocked" : prog) + '</span></div></div>'; }
+    return status() + '<div class="view">' + hdr("Rewards", S.from === "rewards" ? "home" : "back") +
+      '<div class="scroll" style="background:#fff"><div class="rwtitle">REWARDS</div><div class="unl">' + ic.cup(34, "#E0A810") + '<span>Unlock discounts by adding recommended items!<br><span class="fine" style="font-weight:400">Recommended items in your cart: ' + n + '</span></span></div><div style="padding:0 14px 14px">' +
+      tier(ic.pct, "Get around " + fmt(CASHBACK) + " cashback by adding more than 4 recommended items", c.cash, "Add " + (T_CASH_OVER + 1 - n) + " more (" + n + " of " + (T_CASH_OVER + 1) + ")") +
+      tier(ic.tag, "10% Discount on adding 2 items", n >= T_DISC, "Add " + (T_DISC - n) + " more (" + n + " of " + T_DISC + ")") +
+      tier(ic.medal, "1 day free trial upon adding 7 items", c.trial, "Add " + (T_TRIAL - n) + " more (" + n + " of " + T_TRIAL + ")") +
+      '<div class="tier na"><div class="ic">' + ic.cup(40, "#7C8CA0") + '</div><div class="tx">Win exciting prizes from a partner brand above 9 orders<span class="st">Needs order history, not simulated here</span></div></div>' +
+      '<div class="fine">Reward tiers follow the wireframe. How each applies to the bill is assumed for this demo.</div></div></div>' +
+      '<div class="foot"><button class="btn full" data-act="cart" data-fk="gocart3">Go to cart</button></div></div>';
+  }
+  function doneScr() {
+    var d = S.done;
+    return '<div class="success" role="dialog" aria-label="Order confirmed (simulated)">' + ic.ok + '<h2>Order confirmed</h2><p>Simulated. No order was placed and nothing was charged.</p>' +
+      '<div class="box">' + d.n + ' item' + (d.n === 1 ? "" : "s") + ' &middot; Paid ' + fmt(d.pay) + '<br>Recommended items: ' + d.recCount + (d.disc ? '<br>Discount applied: ' + fmt(d.disc) : "") + (d.cash ? '<br>Cashback to come: ' + fmt(CASHBACK) : "") + (d.trial ? '<br>1 day free trial unlocked' : "") + '</div>' +
+      '<button class="btn" data-act="restart" data-fk="restart">Start over</button></div>';
+  }
+
+  var order = ["browse", "review", "cart", "rewards", "pay"];
+  var labels = { browse: "Select items and add them to the cart", review: "Review items and recommendations pop up", cart: "Check the cart and recommended items", rewards: "Open the trophy to see rewards", pay: "Add recommended items, apply discounts, pay" };
+  function stage() {
+    if (S.done) return "pay";
+    if (S.screen === "home") return S.sheet ? "review" : "browse";
+    if (S.screen === "recs") return "review";
+    return S.screen;
+  }
+  function steps() {
+    var idx = order.indexOf(stage());
+    document.getElementById("steps").innerHTML = order.map(function (k, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + labels[k] + '</li>';
+    }).join("");
+  }
+  function render(focusKey) {
+    var el = document.getElementById("app");
+    var ae = document.activeElement, fk = focusKey || (ae && el.contains(ae) ? ae.getAttribute("data-fk") : null);
+    var f = { home: home, recs: recs, cart: cart, rewards: rewards }[S.screen];
+    el.innerHTML = f() + (S.done ? doneScr() : "") + (S.toast ? '<div class="toast" role="status">' + esc(S.toast) + '</div>' : "");
+    if (S.screen !== lastScreen) { var vw = el.querySelector(".view"); if (vw) vw.classList.add("enter"); lastScreen = S.screen; }
+    if (fk) { var t = el.querySelector('[data-fk="' + fk + '"]'); if (t && !t.disabled) t.focus({ preventScroll: true }); }
+    steps();
+  }
+  function go(s, fk) { S.screen = s; S.sheet = false; render(fk); }
+  function toast(m) { S.toast = m; clearTimeout(toastTimer); toastTimer = setTimeout(function () { S.toast = ""; render(); }, 2600); }
+
+  function inc(id) { S.cart[id] = qty(id) + 1; }
+  function dec(id) { var q = qty(id) - 1; if (q <= 0) delete S.cart[id]; else S.cart[id] = q; }
+
+  document.getElementById("app").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
+    var a = t.dataset.act, id = t.dataset.id;
+    if (a === "add") { if (isOos(id)) return; inc(id); S.sheet = true; return render("closeSheet"); }
+    if (a === "similar") { inc(SUB_ID); S.sheet = true; return render("closeSheet"); }
+    if (a === "inc") { inc(id); return render(); }
+    if (a === "dec") { dec(id); return render(); }
+    if (a === "remove") { delete S.cart[id]; return render(); }
+    if (a === "swap") { var q = qty(OOS_ID); delete S.cart[OOS_ID]; S.cart[SUB_ID] = qty(SUB_ID) + q; toast("Swapped for " + CAT[SUB_ID].name + ". It counts as a recommended item."); return render(); }
+    if (a === "closeSheet") { S.sheet = false; return render(); }
+    if (a === "recs") return go("recs");
+    if (a === "cart") return go("cart");
+    if (a === "home") return go("home");
+    if (a === "back") return go(S.from === "rewards" ? "home" : S.from);
+    if (a === "rewards") { if (S.screen !== "rewards") S.from = S.screen; return go("rewards"); }
+    if (a === "pay") { var c = calc(); if (!c.n) return; S.done = { n: c.n, pay: c.pay, recCount: c.recCount, disc: c.disc, cash: c.cash, trial: c.trial }; return render("restart"); }
+    if (a === "restart") return restart();
+  });
+  document.getElementById("app").addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && S.sheet) { S.sheet = false; render(); }
+  });
+  function restart() { clearTimeout(toastTimer); var o = S.oos; S = fresh(o); lastScreen = ""; render(); }
+  document.getElementById("oos").addEventListener("change", function (e) {
+    S.oos = e.target.checked;
+    if (S.oos && qty(OOS_ID) > 0) toast(CAT[OOS_ID].name + " is out of stock. A similar item is suggested.");
+    render();
+  });
+  document.getElementById("reset").addEventListener("click", restart);
+  render();
+})();
+</script>
+</body>
+</html>

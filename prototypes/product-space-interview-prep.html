@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Interview Prep loop prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: explainer + flow steps on the left, one phone-framed mobile web view on the right.
+   Page chrome is themed; the phone screen is a fixed light web UI. */
+:root {
+  --bg: #F3F7F6; --surface: #FFFFFF; --ink: #14213D; --muted: #55637A; --line: #D8E3E0; --accent: #0A7566; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF1D0; --warn-ink: #7A4E00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Inter", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D1719; --surface: #152326; --ink: #E7F0EE; --muted: #A5B6B3; --line: #263739; --accent: #5FD0BC; --accent-ink: #0D1719;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0D1719; --surface: #152326; --ink: #E7F0EE; --muted: #A5B6B3; --line: #263739; --accent: #5FD0BC; --accent-ink: #0D1719;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px;
+  padding-block: 20px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+[hidden] { display: none !important; }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 14px; font-size: 14px; font-weight: 500; color: var(--accent); text-decoration: none; padding: 4px 2px; }
+.back:hover { text-decoration: underline; }
+.topline { max-width: 980px; margin: 0 auto; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; overflow-wrap: anywhere; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 50ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn:focus-visible, .app button:focus-visible, .app textarea:focus-visible, .app summary:focus-visible, .back:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.app .on-dark:focus-visible { outline-color: #fff; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #0B1A1C; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(5,25,25,.28); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #16222E; }
+.status { height: 38px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 13px; font-weight: 500; flex: none; background: #fff; }
+.url { margin: 0 14px 6px; padding: 6px 12px; border-radius: 999px; background: #EEF3F2; font-size: 12px; color: #4A5A60; text-align: center; flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 14px 10px; border-bottom: 1px solid #E3EBE9; flex: none; background: #fff; }
+.nav .brand { font: 700 15px var(--font-app); color: #14213D; background: none; border: 0; padding: 6px 2px; cursor: pointer; }
+.nav .links { display: flex; align-items: center; gap: 4px; }
+.nav .link { font: 500 13.5px var(--font-app); color: #4A5A60; background: none; border: 0; padding: 7px 10px; border-radius: 999px; cursor: pointer; }
+.nav .link.on { background: #0A7566; color: #fff; font-weight: 600; }
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; background: #F3F7F6; }
+.pad { padding: 16px; }
+.hero { background: #14213D; color: #fff; padding: 22px 16px 24px; }
+.hero h2 { margin: 0 0 6px; font-size: 22px; line-height: 1.2; }
+.hero p { margin: 0; font-size: 14px; line-height: 1.45; color: #C9D4E6; }
+.cta { background: #D9F2EC; border: 1px solid #A9DDD1; border-radius: 14px; padding: 18px 16px; margin: 16px; }
+.cta h3 { margin: 0 0 4px; font-size: 18px; line-height: 1.25; }
+.cta p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.45; color: #34505A; }
+.card { background: #fff; border: 1px solid #E3EBE9; border-radius: 12px; padding: 12px 14px; }
+.ph { display: grid; gap: 10px; padding: 0 16px 16px; }
+.ph .card b { display: block; font-size: 14px; margin-bottom: 2px; }
+.ph .card small { color: #5A6A70; font-size: 12.5px; }
+.btn { font: 600 15px var(--font-app); padding: 13px 18px; border-radius: 10px; border: 1.5px solid #0A7566; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; gap: 8px; background: #fff; color: #0A7566; }
+.btn.primary { background: #0A7566; color: #fff; }
+.btn.block { width: 100%; }
+.btn:disabled { background: #E6ECEB; border-color: #E6ECEB; color: #6A787D; cursor: not-allowed; }
+.btn.navy { background: #14213D; border-color: #14213D; color: #fff; }
+.h2 { margin: 0 0 4px; font-size: 20px; line-height: 1.25; }
+.sub { margin: 0 0 14px; font-size: 13.5px; line-height: 1.45; color: #4A5A60; }
+.h2:focus { outline: none; }
+.qlist { display: grid; gap: 10px; }
+.qcard { text-align: left; width: 100%; background: #fff; border: 1px solid #D6E2DF; border-radius: 12px; padding: 12px 14px; cursor: pointer; font-family: var(--font-app); color: #16222E; display: grid; gap: 8px; }
+.qcard:hover { border-color: #0A7566; }
+.qcard .t { font-size: 15px; font-weight: 600; line-height: 1.35; }
+.qcard .topic { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: #4A5A60; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.sample { background: #FFF1D0; color: #7A4E00; }
+.pill.verified { background: #D3F0E4; color: #0A6046; }
+.pill.expert { background: #D9F2EC; color: #0A6B5E; }
+.pill.community { background: #E6E9F4; color: #3A4670; }
+.pill.practice { background: #ECEFF0; color: #3F4D52; }
+.pill.attempted { background: #14213D; color: #fff; }
+.legend { background: #fff; border: 1px solid #E3EBE9; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+.legend summary { cursor: pointer; font-weight: 600; padding: 2px 0; }
+.legend dl { margin: 8px 0 2px; display: grid; gap: 6px; line-height: 1.4; color: #34444A; }
+.legend dt { font-weight: 600; color: #16222E; }
+.legend dd { margin: 0; }
+.back-l { background: none; border: 0; padding: 6px 2px 10px; font: 600 14px var(--font-app); color: #0A7566; cursor: pointer; }
+textarea { width: 100%; min-height: 190px; resize: vertical; border: 1.5px solid #9FB4B1; border-radius: 10px; padding: 12px; font: 400 15px/1.45 var(--font-app); color: #16222E; background: #fff; }
+.count { display: flex; justify-content: space-between; font-size: 12.5px; color: #4A5A60; margin-top: 6px; gap: 8px; }
+.cred { display: grid; gap: 0; background: #fff; border: 1px solid #E3EBE9; border-radius: 12px; overflow: hidden; margin: 12px 0; }
+.cred div { display: grid; grid-template-columns: 104px 1fr; gap: 10px; padding: 8px 12px; font-size: 13px; line-height: 1.4; border-top: 1px solid #EDF2F1; }
+.cred div:first-child { border-top: 0; }
+.cred dt { color: #4A5A60; font-weight: 600; }
+.cred dd { margin: 0; overflow-wrap: anywhere; }
+.sec { background: #fff; border: 1px solid #E3EBE9; border-radius: 12px; padding: 12px 14px; margin-top: 12px; }
+.sec h3 { margin: 0 0 8px; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+.sec p { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sec ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.5; display: grid; gap: 6px; }
+.fine { font-size: 12px; color: #4A5A60; line-height: 1.4; margin: 8px 0 0; }
+.fb { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 13px; }
+.chip { font: 500 13px var(--font-app); border: 1.5px solid #9FB4B1; background: #fff; color: #16222E; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: #0A7566; border-color: #0A7566; color: #fff; }
+.chip.lnk { border-color: transparent; text-decoration: underline; color: #0A7566; padding-inline: 6px; }
+.foot { padding: 12px 16px 16px; background: #fff; border-top: 1px solid #E3EBE9; display: grid; gap: 10px; flex: none; }
+.big2 { display: grid; gap: 10px; margin-top: 8px; }
+.bar { height: 10px; border-radius: 999px; background: #DCE6E4; overflow: hidden; margin: 6px 0 14px; }
+.bar i { display: block; height: 100%; background: #0A7566; border-radius: 999px; }
+.prog b { font-size: 15px; }
+.switch { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: #fff; border: 1px solid #D6E2DF; border-radius: 12px; padding: 10px 12px; font: 400 13.5px/1.4 var(--font-app); color: #16222E; cursor: pointer; }
+.switch .k { flex: none; width: 36px; height: 20px; border-radius: 999px; background: #8FA2A0; position: relative; margin-top: 1px; }
+.switch .k::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+.switch[aria-pressed="true"] .k { background: #0A7566; }
+.switch[aria-pressed="true"] .k::after { left: 18px; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: #14213D; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 4; }
+.rq { margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.45; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } .nav .link { padding: 7px 8px; font-size: 13px; } .cred div { grid-template-columns: 92px 1fr; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } .bar i { transition: width .35s ease; } }
+</style>
+</head>
+<body>
+<div class="topline"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Product Space &middot; Interview Prep</div>
+      <h1>Interview Prep loop</h1>
+      <p class="lede">An attempt-first practice loop that gives candidates a reason to return: pick a question, try it before seeing guidance, compare, mark a weak area, get a suggested next practice, and watch the progress panel update. Every question carries a visible credibility label.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype with illustrative content, not the real product</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="row">
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Questions, guidance, reviewer names, companies and dates are placeholders. The progress counts reflect only what you do here. Rewards are a &ldquo;test later&rdquo; idea and nudges are permission-based; neither sends or awards anything in this prototype.</p>
+    </div>
+  </section>
+  <div class="phone" role="region" aria-label="Simulated Product Space mobile web view"><div class="screen app" id="app"></div></div>
+</main>
+<div class="sr" id="live" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var TOPICS = ["Product design", "Metrics", "Strategy", "Prioritisation", "Execution"];
+  var DEF = {
+    verified: "Source confirmed by a defined check",
+    expert: "Answer checked against published criteria",
+    community: "Not independently verified",
+    practice: "Illustrative, not a claimed real question"
+  };
+  var LABEL = { verified: "Verified firsthand interview", expert: "Expert reviewed", community: "Community submitted", practice: "Practice question" };
+  var GUIDE = {
+    "Product design": ["[Sample] Clarify the goal and who the user is before proposing anything.", "[Sample] Name a few user problems, then pick one and say why.", "[Sample] Offer solutions, compare them, and recommend one with a trade-off."],
+    "Metrics": ["[Sample] State what success means for the user and for the business.", "[Sample] Pick one main metric and a guardrail, and define each clearly.", "[Sample] Say how you would read a change and what you would do next."],
+    "Strategy": ["[Sample] Describe the market, the user segment and where the product could win.", "[Sample] Lay out two or three options with the assumptions behind each.", "[Sample] Recommend a direction and say what would change your mind."],
+    "Prioritisation": ["[Sample] List the candidates and the goal they serve.", "[Sample] Use a simple, stated framework and explain the inputs.", "[Sample] Make the call, and say what you would defer and why."],
+    "Execution": ["[Sample] Restate the problem and break it into causes or workstreams.", "[Sample] Say what you would check first and how you would check it.", "[Sample] Close with an action, an owner and a way to follow up."]
+  };
+  var Q = [
+    { id: "q1", topic: "Product design", text: "How would you improve onboarding for a food-delivery app?", labels: ["verified", "expert"],
+      f: { src: "Firsthand (sample)", co: "[Company], APM (if verified)", date: "[Month YYYY] (if supplied)", rev: "[Name], [qualification] (if consented)", last: "[date]" } },
+    { id: "q2", topic: "Metrics", text: "How would you measure the success of a new feature for [a product]?", labels: ["expert"],
+      f: { src: "Sample source", co: "Not stated", date: "Not supplied", rev: "[Name], [qualification] (if consented)", last: "[date]" } },
+    { id: "q3", topic: "Strategy", text: "Should [a product] enter a new market segment? What would you consider?", labels: ["community"],
+      f: { src: "Community submitted (sample)", co: "Not stated", date: "Not supplied", rev: "Not yet reviewed", last: "Not yet reviewed" } },
+    { id: "q4", topic: "Prioritisation", text: "You have three feature requests and one team. How do you decide what to build first?", labels: ["practice"],
+      f: { src: "Product Space practice question (illustrative)", co: "Not applicable, not a claimed real question", date: "Not applicable", rev: "[Name], [qualification] (if consented)", last: "[date]" } },
+    { id: "q5", topic: "Execution", text: "A key metric for [a product] dropped last week. What do you do?", labels: ["expert", "community"],
+      f: { src: "Community submitted (sample)", co: "Not stated", date: "Not supplied", rev: "[Name], [qualification] (if consented)", last: "[date]" } },
+    { id: "q6", topic: "Product design", text: "Design a way for [a product] to help first-time users find what they need.", labels: ["practice"],
+      f: { src: "Product Space practice question (illustrative)", co: "Not applicable, not a claimed real question", date: "Not applicable", rev: "Not yet reviewed", last: "Not yet reviewed" } }
+  ];
+  var MIN = 10;
+
+  function fresh() { return { screen: "home", qid: null, text: "", done: {}, attempts: 0, weak: {}, helpful: null, nudge: false }; }
+  var S = fresh(), lastScreen = "", toastTimer = null;
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function qById(id) { for (var i = 0; i < Q.length; i++) if (Q[i].id === id) return Q[i]; return null; }
+  function topicsPracticed() { var seen = {}, n = 0; Q.forEach(function (q) { if (S.done[q.id] && !seen[q.topic]) { seen[q.topic] = 1; n++; } }); return n; }
+  function weakList() { return Q.filter(function (q) { return S.weak[q.id]; }); }
+  function pills(q, extra) {
+    var h = '<span class="pill sample">Sample &middot; illustrative</span>' + q.labels.map(function (l) { return '<span class="pill ' + l + '">' + LABEL[l] + '</span>'; }).join("");
+    return '<div class="pills">' + h + (extra || "") + '</div>';
+  }
+  function suggest() {
+    var cur = qById(S.qid), pool = Q.filter(function (q) { return !S.done[q.id] && (!cur || q.id !== cur.id); });
+    if (!pool.length) return null;
+    if (cur && S.weak[cur.id]) {
+      for (var i = 0; i < pool.length; i++) if (pool[i].topic === cur.topic) return { q: pool[i], why: "You marked " + cur.topic + " as a weak area, so here is another question in the same topic." };
+    }
+    for (var j = 0; j < pool.length; j++) if (!cur || pool[j].topic !== cur.topic) return { q: pool[j], why: cur ? "A different topic keeps your preparation broad." : "A good place to start." };
+    return { q: pool[0], why: "The next question you have not attempted yet." };
+  }
+
+  function status() { return '<div class="status"><span>9:41</span><span>Mobile web</span></div><div class="url">productspace.example/' + (S.screen === "home" ? "" : "interview-prep") + '</div>'; }
+  function nav(active) {
+    return '<div class="nav"><button class="brand" type="button" data-act="home" data-f="brand">Product Space</button><div class="links">' +
+      '<button class="link" type="button" data-act="courses" data-f="courses">Courses</button>' +
+      '<button class="link' + (active ? " on" : "") + '" type="button" data-act="landing" data-f="navprep"' + (active ? ' aria-current="page"' : "") + '>Interview Prep</button></div></div>';
+  }
+
+  function home() {
+    return status() + '<div class="view">' + nav(false) + '<div class="scroll">' +
+      '<div class="hero"><h2 tabindex="-1" data-h>Learn product management</h2><p>[Sample homepage] Courses and learning paths appear here.</p></div>' +
+      '<div class="cta"><h3>Preparing for a PM interview?</h3><p>Practise a question, compare with guidance, and see your progress.</p><button class="btn primary" type="button" data-act="landing" data-f="cta">Start practising</button></div>' +
+      '<div class="ph"><div class="card"><b>[Sample course]</b><small>Placeholder card for the existing course catalogue.</small></div><div class="card"><b>[Sample course]</b><small>Placeholder card for the existing course catalogue.</small></div></div>' +
+      '</div></div>';
+  }
+  function landing() {
+    var list = Q.map(function (q) {
+      var tag = S.done[q.id] ? '<span class="pill attempted">Attempted</span>' : "";
+      return '<button class="qcard" type="button" data-act="pick" data-q="' + q.id + '" data-f="q-' + q.id + '"><span class="topic"><span>' + q.topic + '</span></span><span class="t">' + esc(q.text) + '</span>' + pills(q, tag) + '</button>';
+    }).join("");
+    var legend = ["verified", "expert", "community", "practice"].map(function (k) { return '<dt>' + LABEL[k] + '</dt><dd>' + DEF[k] + '</dd>'; }).join("");
+    return status() + '<div class="view">' + nav(true) + '<div class="scroll"><div class="pad">' +
+      '<h2 class="h2" tabindex="-1" data-h>Interview Prep</h2><p class="sub">Choose a question. You will attempt it before seeing any guidance. All content below is sample content.</p>' +
+      '<details class="legend"><summary>What do the labels mean?</summary><dl>' + legend + '</dl></details>' +
+      '<div class="qlist">' + list + '</div></div></div></div>';
+  }
+  function attempt() {
+    var q = qById(S.qid), n = S.text.trim().length;
+    return status() + '<div class="view">' + nav(true) + '<div class="scroll"><div class="pad">' +
+      '<button class="back-l" type="button" data-act="landing" data-f="backl">&larr; All questions</button>' +
+      '<div class="eyebrow" style="font-size:11px;color:#4A5A60">' + q.topic + '</div>' +
+      '<h2 class="h2" tabindex="-1" data-h style="margin-top:4px">' + esc(q.text) + '</h2>' + pills(q) +
+      '<p class="sub" style="margin-top:14px">Attempt first: write your answer in your own words. Guidance unlocks after you try.</p>' +
+      '<label for="ans" class="sr">Your answer</label><textarea id="ans" placeholder="Type your answer here">' + esc(S.text) + '</textarea>' +
+      '<div class="count"><span id="hint">' + (n >= MIN ? "Ready to compare." : "Write at least " + MIN + " characters to compare.") + '</span><span id="cnt">' + n + ' characters</span></div>' +
+      '</div></div><div class="foot"><button class="btn primary block" id="reveal" type="button" data-act="compare"' + (n >= MIN ? "" : " disabled") + '>Compare with expert guidance</button></div></div>';
+  }
+  function compare() {
+    var q = qById(S.qid), f = q.f;
+    var g = GUIDE[q.topic].map(function (t) { return '<li>' + t + '</li>'; }).join("");
+    return status() + '<div class="view">' + nav(true) + '<div class="scroll"><div class="pad">' +
+      '<h2 class="h2" tabindex="-1" data-h>Compare your answer</h2>' + pills(q) +
+      '<dl class="cred" aria-label="Credibility details (sample)"><div><dt>Source</dt><dd>' + f.src + '</dd></div><div><dt>Company, role</dt><dd>' + f.co + '</dd></div><div><dt>Interview date</dt><dd>' + f.date + '</dd></div><div><dt>Reviewer</dt><dd>' + f.rev + '</dd></div><div><dt>Last reviewed</dt><dd>' + f.last + '</dd></div></dl>' +
+      '<div class="sec"><h3>Your attempt</h3><p>' + esc(S.text.trim()) + '</p></div>' +
+      '<div class="sec"><h3>Sample expert guidance <span class="pill sample">Sample text</span></h3><ul>' + g + '</ul><p class="fine">Placeholder guidance written for this prototype. It is not an answer from a real reviewer.</p></div>' +
+      '<div class="sec"><div class="fb"><span id="fbl"><b>Feedback:</b> helpful?</span>' +
+      '<button class="chip" type="button" data-act="fb" data-v="yes" data-f="fbyes" aria-pressed="' + (S.helpful === "yes") + '">Yes</button>' +
+      '<button class="chip" type="button" data-act="fb" data-v="no" data-f="fbno" aria-pressed="' + (S.helpful === "no") + '">No</button>' +
+      '<button class="chip lnk" type="button" data-act="report" data-f="rep">Report a correction</button></div></div>' +
+      '</div></div><div class="foot"><button class="btn primary block" type="button" data-act="toweak">Continue</button></div></div>';
+  }
+  function weak() {
+    var q = qById(S.qid);
+    return status() + '<div class="view">' + nav(true) + '<div class="scroll"><div class="pad">' +
+      '<h2 class="h2" tabindex="-1" data-h>How did that feel?</h2><p class="sub">Mark <b>' + q.topic + '</b> as a weak area to add this question to your revision queue and shape what is suggested next.</p>' +
+      '<div class="sec" style="margin-top:0"><b style="font-size:14px">' + esc(q.text) + '</b></div>' +
+      '<div class="big2"><button class="btn primary block" type="button" data-act="markweak" data-f="mw">Mark as a weak area</button><button class="btn block" type="button" data-act="notweak" data-f="nw">Not a weak area</button></div>' +
+      '</div></div></div>';
+  }
+  function next() {
+    var q = qById(S.qid), s = suggest(), isWeak = !!S.weak[q.id];
+    var body = isWeak ? '<div class="sec" style="margin-top:0"><b style="font-size:14px">Added to your revision queue</b><p class="fine" style="margin-top:4px">' + esc(q.text) + '</p></div>' : '<div class="sec" style="margin-top:0"><b style="font-size:14px">Not marked as a weak area</b><p class="fine" style="margin-top:4px">Nothing was added to your revision queue.</p></div>';
+    var sug = s ? '<div class="sec"><h3>Suggested next practice</h3><p class="fine" style="margin:0 0 8px">' + s.why + '</p><div class="qcard" style="cursor:default"><span class="topic"><span>' + s.q.topic + '</span></span><span class="t">' + esc(s.q.text) + '</span>' + pills(s.q) + '</div></div>'
+      : '<div class="sec"><h3>Suggested next practice</h3><p class="fine" style="margin:0">You have attempted every sample question. Check your progress and revision queue.</p></div>';
+    var foot = s ? '<button class="btn primary block" type="button" data-act="pick" data-q="' + s.q.id + '" data-f="sn">Practise this question</button><button class="btn block" type="button" data-act="progress" data-f="vp">See my progress</button>'
+      : '<button class="btn primary block" type="button" data-act="progress" data-f="vp">See my progress</button>';
+    return status() + '<div class="view">' + nav(true) + '<div class="scroll"><div class="pad"><h2 class="h2" tabindex="-1" data-h>Next up</h2>' + body + sug + '</div></div><div class="foot">' + foot + '</div></div>';
+  }
+  function progress() {
+    var tp = topicsPracticed(), wk = Math.min(S.attempts, 3), wl = weakList(), s = suggest();
+    var rq = wl.length ? '<ul class="rq">' + wl.map(function (q) { return '<li>' + esc(q.text) + '</li>'; }).join("") + '</ul>' : '<p class="fine" style="margin:0">Empty. Questions you mark as a weak area appear here.</p>';
+    var nxt = s ? '<button class="btn primary block" type="button" data-act="pick" data-q="' + s.q.id + '" data-f="pn">Next: ' + esc(s.q.text) + '</button>' : '<button class="btn primary block" type="button" data-act="landing" data-f="pn">All sample questions attempted. Review the list</button>';
+    return status() + '<div class="view">' + nav(true) + '<div class="scroll"><div class="pad prog">' +
+      '<div class="pills" style="margin-bottom:8px"><span class="pill sample">Conceptual UI &middot; illustrative</span></div>' +
+      '<h2 class="h2" tabindex="-1" data-h>Your progress</h2>' +
+      '<div class="sec" style="margin-top:8px">' +
+      '<b id="p1">Topics practised: ' + tp + ' of ' + TOPICS.length + '</b><div class="bar" role="progressbar" aria-labelledby="p1" aria-valuemin="0" aria-valuemax="' + TOPICS.length + '" aria-valuenow="' + tp + '"><i style="width:' + (tp / TOPICS.length * 100) + '%"></i></div>' +
+      '<b id="p2">Weekly goal: ' + wk + ' of 3 attempts</b><div class="bar" role="progressbar" aria-labelledby="p2" aria-valuemin="0" aria-valuemax="3" aria-valuenow="' + wk + '"><i style="width:' + (wk / 3 * 100) + '%"></i></div>' +
+      '<b>Revision queue: ' + wl.length + ' question' + (wl.length === 1 ? "" : "s") + '</b>' + rq +
+      '<p class="fine">Counts come from what you did in this prototype. The weekly goal here is a small challenge, not a streak.</p></div>' +
+      '<div class="sec"><h3>Nudges</h3><button class="switch" type="button" data-act="nudge" data-f="nudge" aria-pressed="' + S.nudge + '"><span class="k" aria-hidden="true"></span><span>Let Product Space remind me about new questions in [a saved company]. Optional, and you can turn it off.</span></button>' +
+      (S.nudge ? '<p class="fine">Illustrative: your choice is only recorded in this prototype. No notification is sent.</p>' : '<p class="fine">Off by default. Nudges only happen with your permission.</p>') + '</div>' +
+      '<div class="big2" style="margin-top:14px">' + nxt + '<button class="btn block" type="button" data-act="landing" data-f="bl">Back to question list</button></div>' +
+      '</div></div></div>';
+  }
+
+  var order = ["home", "landing", "attempt", "compare", "weak", "next", "progress"];
+  var labels = { home: "Homepage entry and CTA", landing: "Choose a question (with credibility labels)", attempt: "Attempt before the answer", compare: "Compare with sample guidance", weak: "Mark a weak area", next: "Suggested next practice", progress: "Progress panel" };
+  function steps() {
+    var idx = order.indexOf(S.screen);
+    document.getElementById("steps").innerHTML = order.map(function (k, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + labels[k] + '</li>';
+    }).join("");
+  }
+  var VIEWS = { home: home, landing: landing, attempt: attempt, compare: compare, weak: weak, next: next, progress: progress };
+  function render() {
+    var el = document.getElementById("app"), ae = document.activeElement, keep = ae && ae.getAttribute ? ae.getAttribute("data-f") : null;
+    var changed = S.screen !== lastScreen, scrollTop = 0, sc = el.querySelector(".scroll");
+    if (sc && !changed) scrollTop = sc.scrollTop;
+    el.innerHTML = VIEWS[S.screen]();
+    var vw = el.querySelector(".view"), sc2 = el.querySelector(".scroll");
+    if (changed) {
+      lastScreen = S.screen;
+      if (vw) vw.classList.add("enter");
+      var h = el.querySelector("[data-h]");
+      if (h && !(S.screen === "home")) h.focus({ preventScroll: true });
+    } else {
+      if (sc2) sc2.scrollTop = scrollTop;
+      if (keep) { var k = el.querySelector('[data-f="' + keep + '"]'); if (k) k.focus({ preventScroll: true }); }
+    }
+    steps();
+  }
+  function go(s) { S.screen = s; render(); }
+  function say(msg) {
+    document.getElementById("live").textContent = msg;
+    var el = document.getElementById("app"), old = el.querySelector(".toast"); if (old) old.remove();
+    var t = document.createElement("div"); t.className = "toast"; t.textContent = msg; el.appendChild(t);
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.remove(); }, 2600);
+  }
+
+  var app = document.getElementById("app");
+  app.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
+    var a = t.getAttribute("data-act");
+    if (a === "home") return go("home");
+    if (a === "landing") return go("landing");
+    if (a === "courses") return say("Courses are not part of this prototype.");
+    if (a === "pick") { S.qid = t.getAttribute("data-q"); S.text = ""; S.helpful = null; return go("attempt"); }
+    if (a === "compare") {
+      if (S.text.trim().length < MIN) return;
+      S.done[S.qid] = true; S.attempts += 1; S.helpful = null; return go("compare");
+    }
+    if (a === "fb") { var v = t.getAttribute("data-v"); S.helpful = S.helpful === v ? null : v; return render(); }
+    if (a === "report") return say("Illustrative: no correction was sent.");
+    if (a === "toweak") return go("weak");
+    if (a === "markweak") { S.weak[S.qid] = true; return go("next"); }
+    if (a === "notweak") { delete S.weak[S.qid]; return go("next"); }
+    if (a === "progress") return go("progress");
+    if (a === "nudge") { S.nudge = !S.nudge; return render(); }
+  });
+  app.addEventListener("input", function (e) {
+    if (e.target.id !== "ans") return;
+    S.text = e.target.value;
+    var n = S.text.trim().length, b = document.getElementById("reveal");
+    if (b) b.disabled = n < MIN;
+    var c = document.getElementById("cnt"); if (c) c.textContent = n + " characters";
+    var h = document.getElementById("hint"); if (h) h.textContent = n >= MIN ? "Ready to compare." : "Write at least " + MIN + " characters to compare.";
+  });
+  document.getElementById("reset").addEventListener("click", function () { clearTimeout(toastTimer); S = fresh(); lastScreen = ""; render(); });
+  render();
+})();
+</script>
+</body>
+</html>

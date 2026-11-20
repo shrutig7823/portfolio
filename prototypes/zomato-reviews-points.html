@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zomato Points prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #FBF5F4; --surface: #FFFFFF; --ink: #2A1618; --muted: #6A5557; --line: #EBD9D7; --accent: #B3202A; --accent-ink: #FFFFFF;
+  --warn-bg: #FFF4DC; --warn-ink: #8A5A00;
+  --font-ui: "DM Sans", system-ui, sans-serif; --font-app: "Roboto", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1A0F10; --surface: #261718; --ink: #F6E9E8; --muted: #BFA9A8; --line: #43292B; --accent: #FF8F96; --accent-ink: #2A1618;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #1A0F10; --surface: #261718; --ink: #F6E9E8; --muted: #BFA9A8; --line: #43292B; --accent: #FF8F96; --accent-ink: #2A1618;
+  --warn-bg: #3A2E12; --warn-ink: #F2C879; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px; padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+[hidden] { display: none !important; }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 14px; color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none; }
+.topbar { max-width: 980px; margin: 0 auto; }
+.back:hover { text-decoration: underline; }
+.back:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 50ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; line-height: 1.35; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn:focus-visible, .btn:focus-visible, .ibtn:focus-visible, .sr:focus-visible, .chip:focus-visible, .nav button:focus-visible, .link:focus-visible, .tab:focus-visible, .act:focus-visible, .field:focus-visible {
+  outline: 3px solid #1A5FD0; outline-offset: 2px; }
+.pbtn.solid { background: var(--accent); color: var(--accent-ink); }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #1B1213; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(40,10,15,.3); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-app); color: #26191A; }
+.status { height: 38px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; background: #fff; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.hdr { display: flex; align-items: center; gap: 10px; padding: 8px 12px 10px; font-size: 18px; font-weight: 500; flex: none; background: #fff; }
+.ibtn { background: none; border: 0; padding: 6px; cursor: pointer; color: #26191A; display: grid; border-radius: 8px; }
+.scroll { flex: 1; overflow-y: auto; background: #F6F1F0; }
+.sec { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+.sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+.sec p { margin: 0; }
+.small { font-size: 12.5px; color: #66595A; line-height: 1.4; }
+.tile { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 700; flex: none; }
+.rest { display: flex; gap: 12px; align-items: center; }
+.rest b { font-size: 16px; font-weight: 500; display: block; }
+.badge { display: inline-flex; align-items: center; gap: 3px; background: #1E7B56; color: #fff; font-weight: 700; font-size: 13px; padding: 2px 7px; border-radius: 6px; }
+.btn { font: 500 15px var(--font-app); letter-spacing: .04em; text-transform: uppercase; width: 100%; padding: 14px; border-radius: 8px; border: 1.5px solid #B3202A; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.primary { background: #B3202A; color: #fff; } .btn.outline { background: #fff; color: #B3202A; }
+.btn:disabled { background: #EEE7E6; border-color: #EEE7E6; color: #766A6B; cursor: not-allowed; }
+.foot { padding: 12px 16px 14px; background: #fff; border-top: 1px solid #EFE6E5; display: grid; gap: 10px; flex: none; }
+.link { background: none; border: 0; padding: 2px 0; font: inherit; color: #1A5FD0; text-decoration: underline; cursor: pointer; }
+.nav { display: flex; justify-content: space-around; align-items: center; background: #fff; border-top: 1px solid #EFE6E5; padding: 6px 4px 8px; flex: none; }
+.nav span, .nav button { display: flex; flex-direction: column; align-items: center; gap: 2px; font: 500 11px var(--font-app); color: #66595A; background: none; border: 0; padding: 4px 10px; border-radius: 8px; }
+.nav button { cursor: pointer; color: #8A1620; }
+.status-line { display: flex; align-items: center; gap: 10px; background: #DDF1E8; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 500; }
+.items { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+.items li { display: flex; justify-content: space-between; }
+
+/* reminder sheet */
+.scrim { position: absolute; inset: 0; background: rgba(20,8,10,.5); z-index: 5; display: flex; align-items: flex-end; }
+.sheet { background: #fff; width: 100%; border-radius: 22px 22px 0 0; padding: 18px 18px 20px; display: grid; gap: 10px; }
+.sheet h2 { margin: 0; font-size: 19px; font-weight: 500; }
+.sheet p { margin: 0; font-size: 14px; line-height: 1.45; color: #4B3E3F; }
+.pushtag { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #8A1620; }
+
+/* review form */
+.sr-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1E9E8; gap: 8px; }
+.sr-row:last-child { border-bottom: 0; }
+.sr-row > span { font-size: 15px; }
+.stars { display: flex; gap: 0; }
+.sr { background: none; border: 0; padding: 4px 3px; cursor: pointer; display: grid; border-radius: 6px; }
+.field { width: 100%; min-height: 96px; resize: vertical; font: 400 15px var(--font-app); padding: 10px 12px; border: 1.5px solid #CDBDBC; border-radius: 8px; color: #26191A; background: #fff; }
+.count { text-align: right; font-size: 12px; color: #66595A; margin-top: 4px; }
+
+/* earned */
+.hero { background: #B3202A; color: #fff; padding: 22px 20px 26px; text-align: center; }
+.hero h2 { margin: 8px 0 4px; font-size: 22px; font-weight: 500; }
+.hero p { margin: 0; font-size: 14px; opacity: .95; line-height: 1.4; }
+.pb { height: 12px; background: #EBDDDC; border-radius: 999px; overflow: hidden; }
+.pb > i { display: block; height: 100%; background: #1E7B56; border-radius: 999px; }
+@media (prefers-reduced-motion: no-preference) { .pb > i { transition: width .5s ease; } }
+.pbmeta { display: flex; justify-content: space-between; font-size: 13px; margin-top: 6px; color: #4B3E3F; }
+.ms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ms div { border: 1px solid #E5D6D5; border-radius: 10px; padding: 10px 6px; text-align: center; }
+.ms b { display: block; font-size: 22px; font-weight: 500; }
+.ms small { font-size: 11.5px; color: #66595A; line-height: 1.3; display: block; }
+.ms .cur { border-color: #1E7B56; background: #EAF6F0; }
+.rw { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.rw li { display: flex; gap: 10px; align-items: center; border: 1px solid #E5D6D5; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.rw .dot { width: 30px; height: 30px; border-radius: 8px; background: #F8E3E2; display: grid; place-items: center; flex: none; }
+.tabs { display: flex; background: #F1E9E8; border-radius: 8px; padding: 3px; gap: 3px; margin-bottom: 10px; }
+.tab { flex: 1; border: 0; background: transparent; padding: 7px; border-radius: 6px; font: 500 13px var(--font-app); color: #5B4E4F; cursor: pointer; }
+.tab[aria-pressed="true"] { background: #fff; color: #8A1620; box-shadow: 0 1px 3px rgba(40,10,15,.18); }
+.lb { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lb li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; border: 1px solid #EFE3E2; font-size: 14px; }
+.lb li.me { background: #EAF6F0; border-color: #1E7B56; }
+.lb li span:first-child { width: 18px; color: #66595A; }
+.lb li b { margin-left: auto; font-weight: 500; }
+.order { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.order .btn { width: auto; padding: 9px 14px; font-size: 13px; }
+
+/* restaurant + reviews */
+.chip { border: 1px solid #D8C7C6; border-radius: 999px; padding: 7px 14px; font: 400 14px var(--font-app); color: #26191A; background: #fff; cursor: pointer; }
+.chip[aria-pressed="true"] { background: #FBE4E3; border-color: #B3202A; color: #8A1620; font-weight: 500; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.offer { border: 1px dashed #1A5FD0; background: #EAF1FB; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.bar-row { display: grid; grid-template-columns: 96px 1fr 34px; gap: 10px; align-items: center; padding: 5px 0; font-size: 14px; }
+.bar-row .pb { height: 8px; }
+.bar-row b { font-weight: 500; text-align: right; }
+.search { display: flex; align-items: center; gap: 8px; border: 1.5px solid #CDBDBC; border-radius: 8px; padding: 0 10px; background: #fff; }
+.search input { flex: 1; min-width: 0; border: 0; padding: 11px 0; font: 400 15px var(--font-app); background: transparent; color: #26191A; }
+.search:focus-within { outline: 3px solid #1A5FD0; outline-offset: 2px; }
+.search input:focus-visible { outline: none; }
+.rev { background: #fff; padding: 12px 16px; margin-bottom: 8px; }
+.rev-h { display: flex; align-items: center; gap: 10px; }
+.rev-h .tile { width: 36px; height: 36px; border-radius: 50%; font-size: 14px; }
+.rev-h b { font-weight: 500; font-size: 15px; }
+.rev-h .badge { margin-left: auto; }
+.ver { font-size: 11.5px; color: #0E6A47; font-weight: 500; }
+.rev p { margin: 8px 0; font-size: 14px; line-height: 1.45; }
+.subs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.subs span { font-size: 11.5px; background: #F6F1F0; color: #4B3E3F; padding: 3px 8px; border-radius: 999px; }
+.acts { display: flex; gap: 8px; }
+.act { flex: 1; border: 1px solid #D8C7C6; background: #F6F1F0; border-radius: 6px; padding: 8px; font: 500 13px var(--font-app); color: #26191A; cursor: pointer; }
+.act[aria-pressed="true"] { background: #FBE4E3; border-color: #B3202A; color: #8A1620; }
+.empty { padding: 24px 16px; text-align: center; color: #66595A; font-size: 14px; background: #fff; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 84px; background: #26191A; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; z-index: 9; line-height: 1.4; }
+.sticky { position: sticky; top: 0; z-index: 2; background: #fff; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) { .view.enter { animation: fade .22s ease-out; } @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } } }
+</style>
+</head>
+<body>
+<div class="topbar"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Food delivery &middot; Reviews</div>
+      <h1>Zomato Points</h1>
+      <p class="lede">A concept for getting more people to review after delivery. A timely reminder, a quicker review with four short sub-ratings, points toward milestones, and a reviews page that is easier to search and filter. This follows the wireframes and PRD in my four-part project.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not the real app, no review is posted and no points are real</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="row">
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Restaurant, reviewers, reviews and counts are made-up samples. Reward types and the 50, 100 and 200 milestones come from my PRD. Reward values, and how many points a review earns, were not defined there, so none are shown as facts.</p>
+    </div>
+  </section>
+  <div class="phone" role="group" aria-label="Simulated app screen"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  var SUBS = ["Taste", "Portion Size", "Packaging", "Value for money"];
+  var REST = { name: "Sample Kitchen", tile: "#8A1620", cuisine: "North Indian (sample restaurant)" };
+  var SAMPLE = [
+    { n: "Ayush", c: "#2F6F5E", v: true, likes: 12, t: "The order was good and delivered quickly. Loved the food.", s: [4, 4, 5, 4] },
+    { n: "Ria", c: "#8A4F9E", v: true, likes: 3, t: "The order was bland and arrived cold. Really disappointed.", s: [2, 3, 2, 2] },
+    { n: "Kabir", c: "#C06A12", v: false, likes: 7, t: "Portion size was generous and the paneer was fresh. Packaging kept everything hot.", s: [4, 5, 5, 4] },
+    { n: "Meera", c: "#1F5FA8", v: true, likes: 9, t: "Tasty biryani but the raita leaked in the bag. Packaging needs work.", s: [4, 3, 2, 4] },
+    { n: "Dev", c: "#6B5B3A", v: false, likes: 1, t: "Okay for the price. Nothing special, would order a different dish next time.", s: [3, 3, 4, 3] },
+    { n: "Sana", c: "#A02B55", v: true, likes: 5, t: "Dal makhani was rich and creamy. Good value for a full meal.", s: [5, 4, 4, 5] }
+  ];
+  var REWARDS = ["Discount on next order", "Cashback on an order", "Limited free Zomato Gold subscription", "Google Pay rewards"];
+  var LB = [{ n: "Aarav", c: 38 }, { n: "Nisha", c: 21 }, { n: "Tara", c: 9 }];
+
+  function fresh() {
+    return { screen: "delivered", dismissed: false, rate: [0, 0, 0, 0], text: "", reviewed: false, myReview: null,
+      pTab: "ms", q: "", relevance: false, verified: false, liked: {}, toast: "" };
+  }
+  var S = fresh(), lastScreen = "", toastTimer = null;
+  var app = document.getElementById("app");
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    star: function (fill, size) { return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.7.8-5 4.6 1.4 6.7L12 17.4 6 20.8l1.4-6.7-5-4.6 6.7-.8z" fill="' + fill + '" stroke="' + (fill === "none" ? "#8A7778" : fill) + '" stroke-width="1.5" stroke-linejoin="round"/></svg>'; },
+    check: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#1E7B56"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+    search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#66595A" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>',
+    bike: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9H8"/></svg>',
+    bowl: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 12h18a9 9 0 0 1-18 0zM8 8c0-2 2-2 2-4M13 8c0-2 2-2 2-4"/></svg>',
+    ticket: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8a2 2 0 0 0 0 4v0a2 2 0 0 0 0 4v1h18v-1a2 2 0 0 1 0-4 2 2 0 0 1 0-4V7H3z"/></svg>',
+    gift: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A1620" stroke-width="1.8" aria-hidden="true"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7c-3 0-4-3-2-3.5S12 7 12 7zM12 7c3 0 4-3 2-3.5S12 7 12 7z"/></svg>'
+  };
+  function status() { return '<div class="status" aria-hidden="true"><span>7:42</span><span>5G &#9646;&#9646;&#9646; 80</span></div>'; }
+  function hdr(t, back) {
+    return '<div class="hdr">' + (back ? '<button class="ibtn" type="button" data-act="' + back + '" aria-label="Back">' + ic.back + '</button>' : "") + '<span>' + t + '</span></div>';
+  }
+  function bottomNav() {
+    return '<nav class="nav" aria-label="Main"><span>' + ic.bike + 'Delivery</span><span>' + ic.bowl + 'Dining</span><span>' + ic.ticket + 'Events</span>' +
+      '<button type="button" data-act="points" ' + (S.screen === "points" ? 'aria-current="page"' : "") + '>' + ic.star("#B3202A", 22) + 'Points</button></nav>';
+  }
+
+  function avg(arr) { return arr.reduce(function (a, b) { return a + b; }, 0) / arr.length; }
+  function allReviews() { return (S.myReview ? [S.myReview] : []).concat(SAMPLE); }
+  function stats() {
+    var rs = allReviews();
+    var subAvg = SUBS.map(function (_, i) {
+      var vals = rs.map(function (r) { return r.s[i]; }).filter(function (v) { return v > 0; });
+      return avg(vals);
+    });
+    var overall = avg(rs.map(function (r) { return r.overall; }));
+    return { subAvg: subAvg, overall: overall, n: rs.length };
+  }
+  SAMPLE.forEach(function (r) { r.overall = avg(r.s); });
+  function f1(n) { return (Math.round(n * 10) / 10).toFixed(1); }
+
+  /* ---------- screens ---------- */
+  function delivered() {
+    var sheet = "";
+    if (S.screen === "remind") {
+      sheet = '<div class="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rtitle">' +
+        '<span class="pushtag">Reminder pop-up, also sent as a push notification</span>' +
+        '<h2 id="rtitle">How was your order from ' + REST.name + '?</h2>' +
+        '<p>Rate it in under a minute. Every rated order counts toward your Zomato Points milestones.</p>' +
+        '<button class="btn primary" type="button" data-act="write" data-focus="1">Rate now</button>' +
+        '<button class="btn outline" type="button" data-act="later">Later</button></div></div>';
+    }
+    return status() + '<div class="view">' + hdr("Your order", "") +
+      '<div class="scroll"><div class="sec"><div class="status-line">' + ic.check + 'Order delivered</div>' +
+      '<div class="rest" style="margin-top:14px"><div class="tile" style="background:' + REST.tile + '" aria-hidden="true">SK</div><div><b>' + REST.name + '</b><span class="small">' + REST.cuisine + '</span></div></div>' +
+      '<ul class="items"><li><span>1 x Dal makhani</span><span>Sample</span></li><li><span>2 x Butter naan</span><span>Sample</span></li><li><span>1 x Veg biryani</span><span>Sample</span></li></ul></div>' +
+      '<div class="sec"><h3>How was it?</h3><p class="small">' + (S.dismissed ? 'You can still rate this order. The same option lives under Your orders in Zomato Points.' : 'A reminder will pop up after delivery.') + '</p></div></div>' +
+      '<div class="foot">' + (S.dismissed ? '<button class="btn primary" type="button" data-act="write">Rate this order</button>' : '<button class="btn outline" type="button" data-act="remind">Simulate the post-delivery reminder</button>') + '</div>' +
+      bottomNav() + '</div>' + sheet;
+  }
+  function starsFor(i) {
+    var out = "";
+    for (var k = 1; k <= 5; k++) {
+      out += '<button class="sr" type="button" data-sub="' + i + '" data-val="' + k + '" aria-pressed="' + (S.rate[i] === k) + '" aria-label="' + SUBS[i] + ': ' + k + ' of 5">' + ic.star(S.rate[i] >= k ? "#E8A317" : "none", 28) + '</button>';
+    }
+    return out;
+  }
+  function write() {
+    var rows = SUBS.map(function (n, i) {
+      return '<div class="sr-row" role="group" aria-label="' + n + '"><span>' + n + '</span><div class="stars">' + starsFor(i) + '</div></div>';
+    }).join("");
+    var any = S.rate.some(function (v) { return v > 0; });
+    return status() + '<div class="view">' + hdr("Rate your order", "delivered") +
+      '<div class="scroll"><div class="sec"><div class="rest"><div class="tile" style="background:' + REST.tile + '" aria-hidden="true">SK</div><div><b>' + REST.name + '</b><span class="small">Sample order, delivered today</span></div></div></div>' +
+      '<div class="sec"><h3>Tap to rate each part</h3>' + rows + '</div>' +
+      '<div class="sec"><h3><label for="rtext">Add a few words (optional)</label></h3><textarea class="field" id="rtext" maxlength="300" placeholder="What stood out about this order?">' + esc(S.text) + '</textarea><div class="count" id="rcount">' + S.text.length + ' / 300</div></div></div>' +
+      '<div class="foot"><button class="btn primary" type="button" data-act="submit" ' + (any ? "" : "disabled") + '>Submit review</button>' + (any ? "" : '<div class="small" style="text-align:center">Rate at least one of the four to submit.</div>') + '</div></div>';
+  }
+  function earned() {
+    return status() + '<div class="view">' + '<div class="scroll"><div class="hero">' + ic.star("#FFD36B", 56) + '<h2>Review submitted</h2><p>Thank you. This review counts toward your first milestone.</p></div>' +
+      '<div class="sec" style="margin-top:8px"><h3>Points earned</h3><p style="font-size:26px;font-weight:500">+1 review counted</p><p class="small">Sample rule for this demo: each rated order counts as one review toward a milestone. The real point values are not decided.</p></div>' +
+      '<div class="sec"><h3>Progress to first milestone</h3>' + progress() + '</div></div>' +
+      '<div class="foot"><button class="btn primary" type="button" data-act="points" data-focus="1">See my Zomato Points</button></div></div>';
+  }
+  function progress() {
+    var n = S.reviewed ? 1 : 0;
+    return '<div class="pb" role="progressbar" aria-valuemin="0" aria-valuemax="50" aria-valuenow="' + n + '" aria-label="Restaurants reviewed toward the 50 milestone"><i style="width:' + (n / 50 * 100) + '%"></i></div>' +
+      '<div class="pbmeta"><span>' + n + ' of 50 restaurants reviewed</span><span>' + (50 - n) + ' to go</span></div>';
+  }
+  function points() {
+    var n = S.reviewed ? 1 : 0, body;
+    if (S.pTab === "ms") {
+      body = '<div class="sec"><h3>Milestones</h3><div class="ms"><div class="cur"><b>50</b><small>restaurants reviewed</small></div><div><b>100</b><small>restaurants reviewed</small></div><div><b>200</b><small>restaurants reviewed</small></div></div>' +
+        '<p class="small" style="margin-top:10px">Reaching a milestone gives you a chance to win a reward from the list below.</p></div>' +
+        '<div class="sec"><h3>Rewards you could win</h3><ul class="rw">' + REWARDS.map(function (r) { return '<li><span class="dot">' + ic.gift + '</span>' + r + '</li>'; }).join("") + '</ul>' +
+        '<p class="small" style="margin-top:10px">Reward types are from my PRD, with more partner rewards possible. Amounts are not defined, so none are shown.</p></div>';
+    } else {
+      var rows = LB.map(function (r, i) { return { n: r.n, c: r.c, me: false }; });
+      rows.push({ n: "You", c: n, me: true });
+      rows.sort(function (a, b) { return b.c - a.c; });
+      body = '<div class="sec"><h3>Leaderboard</h3><ol class="lb">' + rows.map(function (r, i) {
+        return '<li class="' + (r.me ? "me" : "") + '"><span>' + (i + 1) + '</span>' + esc(r.n) + (r.me ? " (you)" : "") + '<b>' + r.c + ' reviews</b></li>';
+      }).join("") + '</ol><p class="small" style="margin-top:10px">Sample names and counts. My PRD notes the leaderboard may be removed depending on how users respond.</p></div>';
+    }
+    return status() + '<div class="view">' + hdr("Zomato Points", "") +
+      '<div class="scroll"><div class="sec"><h3>Your progress</h3>' + progress() + '</div>' +
+      '<div class="sec"><div class="tabs" role="group" aria-label="Points sections"><button class="tab" type="button" data-ptab="ms" aria-pressed="' + (S.pTab === "ms") + '">Milestones</button><button class="tab" type="button" data-ptab="lb" aria-pressed="' + (S.pTab === "lb") + '">Leaderboard</button></div></div>' +
+      body +
+      '<div class="sec"><h3>Your orders</h3><div class="order"><div class="rest"><div class="tile" style="background:' + REST.tile + ';width:38px;height:38px" aria-hidden="true">SK</div><div><b style="font-size:15px">' + REST.name + '</b><span class="small">' + (S.reviewed ? "Reviewed" : "Not reviewed yet") + '</span></div></div>' +
+      (S.reviewed ? '<button class="btn outline" type="button" data-act="restaurant">View page</button>' : '<button class="btn outline" type="button" data-act="write">Rate</button>') + '</div></div></div>' +
+      '<div class="foot">' + (S.reviewed ? '<button class="btn primary" type="button" data-act="restaurant">See the restaurant reviews</button>' : '<button class="btn primary" type="button" data-act="write">Rate your order</button>') + '</div>' +
+      bottomNav() + '</div>';
+  }
+  function restaurant() {
+    var st = stats();
+    return status() + '<div class="view">' + hdr(REST.name, "points") +
+      '<div class="scroll"><div class="sec" style="text-align:center"><div class="tile" style="background:' + REST.tile + ';margin:0 auto 8px" aria-hidden="true">SK</div><b style="font-size:18px;font-weight:500">' + REST.name + '</b><div class="small">' + REST.cuisine + '</div>' +
+      '<div style="margin-top:10px;display:flex;justify-content:center;align-items:center;gap:8px"><span class="badge">' + f1(st.overall) + ' ' + ic.star("#fff", 12) + '</span><button class="link" type="button" data-act="reviews" data-focus="1">' + st.n + ' sample reviews</button></div>' +
+      '<div class="small" style="margin-top:8px">29 mins &middot; 3 km (sample)</div></div>' +
+      '<div class="sec"><div class="offer">Sample offer banner. Offers are not part of this concept.</div></div>' +
+      '<div class="sec"><h3>Recommended for you</h3><div class="rest"><div class="tile" style="background:#C06A12;width:64px;height:64px" aria-hidden="true">DM</div><div><b>Dal makhani</b><span class="small">Sample dish, sample price</span></div></div></div></div>' +
+      '<div class="foot"><button class="btn primary" type="button" data-act="reviews">Read the reviews</button></div></div>';
+  }
+  function filtered() {
+    var q = S.q.trim().toLowerCase();
+    var list = allReviews().filter(function (r) {
+      return (!S.verified || r.v) && (!q || r.t.toLowerCase().indexOf(q) > -1 || r.n.toLowerCase().indexOf(q) > -1);
+    });
+    if (S.relevance) list = list.slice().sort(function (a, b) { return likesOf(b) - likesOf(a); });
+    return list;
+  }
+  function likesOf(r) { return r.likes + (S.liked[r.n] ? 1 : 0); }
+  function listHtml() {
+    var list = filtered();
+    if (!list.length) return '<div class="empty">No reviews match. Try a different word or clear the filters.</div>';
+    return list.map(function (r) {
+      var me = r === S.myReview;
+      return '<article class="rev"><div class="rev-h"><div class="tile" style="background:' + r.c + '" aria-hidden="true">' + esc(r.n.charAt(0)) + '</div><div><b>' + esc(r.n) + '</b>' + (r.v ? '<div class="ver">Verified order</div>' : '') + '</div><span class="badge">' + f1(r.overall) + ' ' + ic.star("#fff", 12) + '</span></div>' +
+        (r.t ? '<p>' + esc(r.t) + '</p>' : '<p class="small">Rated without a written review.</p>') +
+        '<div class="subs">' + SUBS.map(function (n, i) { return r.s[i] ? '<span>' + n + ' ' + r.s[i] + '</span>' : ""; }).join("") + '</div>' +
+        '<div class="acts"><button class="act" type="button" data-like="' + esc(r.n) + '" aria-pressed="' + !!S.liked[r.n] + '">Like ' + likesOf(r) + '</button><button class="act" type="button" data-act="share">Share</button><button class="act" type="button" data-act="comment">Comment</button></div></article>';
+    }).join("");
+  }
+  function reviews() {
+    var st = stats();
+    var bars = SUBS.map(function (n, i) {
+      return '<div class="bar-row"><span>' + n + '</span><div class="pb" aria-hidden="true"><i style="width:' + (st.subAvg[i] / 5 * 100) + '%;background:#1E7B56"></i></div><b>' + f1(st.subAvg[i]) + '</b></div>';
+    }).join("");
+    return status() + '<div class="view">' + hdr(REST.name, "restaurant") +
+      '<div class="scroll"><div class="sec"><span class="badge">' + f1(st.overall) + ' ' + ic.star("#fff", 12) + '</span> <span class="small">&nbsp;' + st.n + ' sample reviews</span><div style="margin-top:8px">' + bars + '</div>' +
+      (S.myReview ? '<p class="small" style="margin-top:6px">Your sample review is included in these bars.</p>' : '') + '</div>' +
+      '<div class="sec sticky"><div class="search">' + ic.search + '<input id="rq" type="search" value="' + esc(S.q) + '" placeholder="Search within reviews" aria-label="Search within reviews" autocomplete="off"></div>' +
+      '<div class="chips" style="margin-top:10px"><button class="chip" type="button" data-flt="relevance" aria-pressed="' + S.relevance + '">Relevance</button><button class="chip" type="button" data-flt="verified" aria-pressed="' + S.verified + '">Verified</button><button class="chip" type="button" data-act="clear">Clear</button></div>' +
+      '<div class="small" id="rcnt" role="status" aria-live="polite" style="margin-top:8px">' + filtered().length + ' of ' + st.n + ' reviews shown</div></div>' +
+      '<div id="rlist">' + listHtml() + '</div></div></div>';
+  }
+
+  /* ---------- steps + render ---------- */
+  var labels = ["Order delivered", "Reminder pop-up", "Write a review with sub-ratings", "Points earned", "Zomato Points section", "Restaurant page", "Reviews page: search and filters"];
+  function stepIndex() {
+    return { delivered: 0, remind: 1, write: 2, earned: 3, points: 4, restaurant: 5, reviews: 6 }[S.screen];
+  }
+  function steps() {
+    var idx = stepIndex();
+    document.getElementById("steps").innerHTML = labels.map(function (l, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + l + '</li>';
+    }).join("");
+  }
+  var views = { delivered: delivered, remind: delivered, write: write, earned: earned, points: points, restaurant: restaurant, reviews: reviews };
+  function render(focusSel) {
+    var scrollEl = app.querySelector(".scroll"), top = scrollEl ? scrollEl.scrollTop : 0;
+    var same = S.screen === lastScreen;
+    app.innerHTML = views[S.screen]() + (S.toast ? '<div class="toast" role="status">' + esc(S.toast) + '</div>' : "");
+    var vw = app.querySelector(".view");
+    if (!same) { if (vw) vw.classList.add("enter"); lastScreen = S.screen; }
+    else { var ns = app.querySelector(".scroll"); if (ns) ns.scrollTop = top; }
+    if (!same) { var f = app.querySelector("[data-focus]"); if (f) f.focus({ preventScroll: true }); }
+    else if (focusSel) { var g = app.querySelector(focusSel); if (g) g.focus({ preventScroll: true }); }
+    steps();
+  }
+  function go(s) { S.screen = s; S.toast = ""; render(); }
+  function toast(m) {
+    S.toast = m; clearTimeout(toastTimer);
+    var t = app.querySelector(".toast"); if (t) t.remove();
+    var d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "status"); d.textContent = m; app.appendChild(d);
+    toastTimer = setTimeout(function () { S.toast = ""; var x = app.querySelector(".toast"); if (x) x.remove(); }, 2400);
+  }
+  function refreshList() {
+    var l = document.getElementById("rlist"), c = document.getElementById("rcnt");
+    if (l) l.innerHTML = listHtml();
+    if (c) c.textContent = filtered().length + " of " + stats().n + " reviews shown";
+  }
+
+  /* ---------- events ---------- */
+  app.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-sub],[data-ptab],[data-flt],[data-like]"); if (!t) return;
+    if (t.dataset.sub !== undefined) {
+      var i = +t.dataset.sub, v = +t.dataset.val;
+      S.rate[i] = S.rate[i] === v ? 0 : v;
+      return render('[data-sub="' + i + '"][data-val="' + v + '"]');
+    }
+    if (t.dataset.ptab) { S.pTab = t.dataset.ptab; return render('[data-ptab="' + S.pTab + '"]'); }
+    if (t.dataset.flt) { S[t.dataset.flt] = !S[t.dataset.flt]; return render('[data-flt="' + t.dataset.flt + '"]'); }
+    if (t.dataset.like) {
+      var n = t.dataset.like; S.liked[n] = !S.liked[n];
+      var keepQ = S.relevance;
+      refreshList();
+      var b = app.querySelector('[data-like="' + n.replace(/"/g, '\\"') + '"]'); if (b) b.focus({ preventScroll: true });
+      return;
+    }
+    var a = t.dataset.act;
+    if (a === "remind") return go("remind");
+    if (a === "later") { S.dismissed = true; return go("delivered"); }
+    if (a === "write") { S.dismissed = true; return go("write"); }
+    if (a === "delivered") return go("delivered");
+    if (a === "submit") {
+      var rated = S.rate.filter(function (x) { return x > 0; });
+      if (!rated.length) return;
+      S.myReview = { n: "You", c: "#B3202A", v: true, likes: 0, t: S.text.trim(), s: S.rate.slice(), overall: avg(rated) };
+      S.reviewed = true; return go("earned");
+    }
+    if (a === "points") return go("points");
+    if (a === "restaurant") return go("restaurant");
+    if (a === "reviews") return go("reviews");
+    if (a === "clear") { S.q = ""; S.relevance = false; S.verified = false; var q = document.getElementById("rq"); if (q) q.value = ""; return render('[data-act="clear"]'); }
+    if (a === "share") return toast("Sharing is not part of this prototype.");
+    if (a === "comment") return toast("Comments are not part of this prototype.");
+  });
+  app.addEventListener("input", function (e) {
+    if (e.target.id === "rtext") { S.text = e.target.value; var c = document.getElementById("rcount"); if (c) c.textContent = S.text.length + " / 300"; }
+    if (e.target.id === "rq") { S.q = e.target.value; refreshList(); }
+  });
+  app.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && S.screen === "remind") { S.dismissed = true; go("delivered"); }
+  });
+  document.getElementById("reset").addEventListener("click", function () { clearTimeout(toastTimer); S = fresh(); lastScreen = ""; render(); });
+  render();
+})();
+</script>
+</body>
+</html>

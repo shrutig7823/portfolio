@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shop This Reel prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: explainer, flow steps and before/after on the left; one phone running the flow on the right.
+   Page chrome is themed; the phone screen is a fixed concept UI that follows the wireframes in the case study. */
+:root {
+  --bg: #FFF4EA; --surface: #FFFFFF; --ink: #3A1230; --muted: #6B4A60; --line: #EBCFC4; --accent: #B3226F; --accent-ink: #FFFFFF;
+  --warn-bg: #FBE3D6; --warn-ink: #7A2A12;
+  --font-ui: "DM Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1D0A19; --surface: #2B1226; --ink: #F8E9F1; --muted: #CBA9BE; --line: #4A2641; --accent: #F07BB5; --accent-ink: #2B0A1F;
+  --warn-bg: #4A2A1C; --warn-ink: #F5C9A8; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #1D0A19; --surface: #2B1226; --ink: #F8E9F1; --muted: #CBA9BE; --line: #4A2641; --accent: #F07BB5; --accent-ink: #2B0A1F;
+  --warn-bg: #4A2A1C; --warn-ink: #F5C9A8; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); padding-block: 20px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.back { display: inline-block; max-width: 980px; margin: 0 auto 14px; color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.topbar { max-width: 980px; margin: 0 auto; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 40px; align-items: start; }
+.side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { margin: 6px 0 8px; font-size: 34px; line-height: 1.1; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; max-width: 52ch; }
+.sim { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.sim h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tag { align-self: flex-start; font-size: 12px; font-weight: 700; background: var(--warn-bg); color: var(--warn-ink); padding: 5px 10px; border-radius: 999px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.steps li { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.steps li b { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; flex: none; }
+.steps li.on { color: var(--ink); font-weight: 700; }
+.steps li.on b { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps li.done b { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.pbtn { font: 700 13px var(--font-ui); border: 1.5px solid var(--accent); color: var(--accent); background: transparent; padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.pbtn.solid { background: var(--accent); color: var(--accent-ink); }
+.pbtn:focus-visible, .btn:focus-visible, .iconbtn:focus-visible, .prod:focus-visible, .sz:focus-visible, .cta:focus-visible, .seg2 button:focus-visible, .back:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+.seg2 { display: flex; gap: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 3px; align-self: flex-start; }
+.seg2 button { font: 700 13px var(--font-ui); border: 0; background: transparent; color: var(--muted); padding: 7px 14px; border-radius: 8px; cursor: pointer; }
+.seg2 button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.path { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; line-height: 1.3; margin: 0; padding: 0; list-style: none; }
+.path li { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
+.path li:not(:last-child)::after { content: "\2192"; margin-left: 8px; color: var(--muted); }
+.path li.pain { border-color: var(--warn-ink); }
+
+/* phone */
+.phone { width: 390px; max-width: 100%; height: 800px; background: #1A0816; border-radius: 46px; padding: 10px; box-shadow: 0 18px 50px rgba(40,10,35,.32); margin: 0 auto; }
+.screen { position: relative; height: 100%; background: #fff; border-radius: 37px; overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-ui); color: #2A0F24; }
+.status { height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 6px 26px 0; font-size: 14px; font-weight: 500; flex: none; }
+.view { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; }
+
+/* reel */
+.reel { background: linear-gradient(170deg, #8C3F63 0%, #B5566F 45%, #E39A72 100%); color: #fff; }
+.reel .status { color: #fff; position: absolute; top: 0; left: 0; right: 0; z-index: 2; }
+.reel .art { position: absolute; inset: 0; overflow: hidden; }
+.reel .art svg { position: absolute; left: 50%; top: 22%; width: 70%; transform: translateX(-50%); opacity: .85; }
+.spons { position: absolute; top: 52px; left: 18px; font-weight: 700; font-size: 15px; z-index: 2; text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.side-icons { position: absolute; right: 14px; bottom: 150px; display: grid; gap: 14px; z-index: 2; }
+.iconbtn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.88); color: #3A1230; display: grid; place-items: center; cursor: default; padding: 0; }
+.reel-foot { position: absolute; left: 18px; right: 74px; bottom: 28px; z-index: 2; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.reel-foot b { display: block; font-size: 17px; }
+.reel-foot span { display: block; font-size: 15px; margin-bottom: 12px; }
+.cta { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #fff; color: #8A1D56; font: 700 16px var(--font-ui); border: 2px solid #C2307F; border-radius: 999px; padding: 12px; cursor: pointer; text-shadow: none; }
+.hint { position: absolute; left: 18px; right: 18px; top: 86px; z-index: 2; background: rgba(26,8,22,.55); color: #fff; font-size: 12px; line-height: 1.4; padding: 8px 12px; border-radius: 10px; }
+
+/* sheet over the reel */
+.dim { position: absolute; inset: 0; background: rgba(40,10,35,.55); z-index: 3; border: 0; padding: 0; cursor: pointer; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 22px 22px 0 0; z-index: 4; padding: 10px 16px 20px; max-height: 78%; display: flex; flex-direction: column; }
+.grab { width: 40px; height: 4px; background: #D9C3CF; border-radius: 4px; margin: 0 auto 10px; flex: none; }
+.sheet-h { display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; }
+.sheet-h h2 { margin: 0; font-size: 18px; }
+.xbtn { border: 0; background: #F6E8EF; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: #3A1230; display: grid; place-items: center; padding: 0; }
+.plist { overflow-y: auto; display: grid; gap: 10px; padding: 2px 2px 4px; margin: 0; list-style: none; }
+.prod { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; background: #fff; border: 1.5px solid #EFD9E3; border-radius: 14px; padding: 10px; cursor: pointer; font-family: var(--font-ui); color: #2A0F24; }
+.prod[aria-pressed="true"] { border-color: #C2307F; background: #FDF1F7; }
+.thumb { width: 64px; height: 64px; border-radius: 10px; flex: none; display: grid; place-items: center; }
+.prod b { display: block; font-size: 15px; }
+.prod small { display: block; color: #6B4A60; font-size: 12.5px; }
+.prod .price { font-size: 15px; font-weight: 700; margin-top: 2px; display: block; }
+.quote { font-style: italic; color: #6B4A60; font-size: 13px; margin: 10px 2px 10px; min-height: 18px; }
+.btn { font: 700 15px var(--font-ui); width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #C2307F; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; text-align: center; }
+.btn.primary { background: #C2307F; color: #fff; }
+.btn.dark { background: #3A1230; border-color: #3A1230; color: #fff; }
+.btn.outline { background: #fff; color: #8A1D56; }
+.btn:disabled { background: #EEE3E9; border-color: #EEE3E9; color: #6E5A67; cursor: not-allowed; }
+.samplenote { font-size: 11.5px; color: #6B4A60; text-align: center; margin: 8px 0 0; line-height: 1.35; }
+
+/* retailer page */
+.hdr { display: flex; align-items: center; gap: 12px; padding: 8px 14px 10px; flex: none; }
+.hdr button { background: none; border: 0; padding: 4px; cursor: pointer; color: #2A0F24; display: grid; border-radius: 8px; }
+.hdr button:focus-visible { outline: 3px solid #C2307F; outline-offset: 2px; }
+.urlpill { flex: 1; background: #F3E9EE; border-radius: 999px; text-align: center; font-weight: 700; font-size: 14px; padding: 8px; }
+.scroll { flex: 1; overflow-y: auto; padding: 4px 16px 12px; }
+.hero { height: 210px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 14px; }
+.scroll h2 { margin: 0 0 2px; font-size: 19px; }
+.scroll .sub { color: #6B4A60; font-size: 13.5px; margin: 0 0 12px; }
+.lbl { font-size: 13px; font-weight: 700; margin: 12px 0 8px; display: flex; justify-content: space-between; }
+.lbl span { font-weight: 400; color: #6B4A60; }
+.sizes { display: flex; gap: 8px; flex-wrap: wrap; }
+.sz { min-width: 48px; height: 44px; padding: 0 12px; border-radius: 10px; border: 1.5px solid #D9C3CF; background: #fff; font: 700 15px var(--font-ui); color: #2A0F24; cursor: pointer; }
+.sz[aria-pressed="true"] { background: #7A1650; border-color: #7A1650; color: #fff; }
+.attr { color: #0B6B4A; font-size: 14px; margin: 14px 0 0; line-height: 1.4; }
+.foot { padding: 10px 16px 18px; border-top: 1px solid #F0E3EA; flex: none; display: grid; gap: 8px; }
+.card { background: #FDF1F7; border: 1px solid #F0D3E3; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.45; margin-bottom: 12px; }
+.card b { display: block; margin-bottom: 2px; }
+.card.green { background: #E6F5EE; border-color: #BFE3D1; }
+.pickrow { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 96px; background: #2A0F24; color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 13px; z-index: 6; line-height: 1.4; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; } .phone { order: -1; } h1 { font-size: 28px; } }
+@media (max-width: 440px) { .phone { height: 760px; border-radius: 38px; padding: 8px; } .screen { border-radius: 30px; } }
+@media (prefers-reduced-motion: no-preference) {
+  .view.enter { animation: fade .22s ease-out; }
+  .sheet.enter { animation: rise .24s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes rise { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+<div class="topbar"><a class="back" href="/#case-studies">&larr; Back to portfolio</a></div>
+<main class="wrap">
+  <section class="side">
+    <div>
+      <div class="eyebrow">Case study concept &middot; Social shopping</div>
+      <h1>Shop This Reel</h1>
+      <p class="lede">On a creator's Reel, a Shop This Reel button opens a panel of the products in that Reel. The shopper picks a product, checks the details and size, then taps through to buy from the external retailer, with no public comment and no waiting for a DM. The purchase itself is completed on the vendor's site.</p>
+    </div>
+    <div class="sim">
+      <span class="tag">Concept prototype, not the real app, nothing is sent or bought</span>
+      <h2>Flow</h2>
+      <ol class="steps" id="steps"></ol>
+      <div class="row">
+        <button class="pbtn" id="reset" type="button">Start over</button>
+      </div>
+      <p class="note">Tap inside the phone to move through the flow. Creator, products, prices and sizes are sample content for illustration only.</p>
+    </div>
+    <div class="sim">
+      <h2>Before and after</h2>
+      <div class="seg2" role="group" aria-label="Compare journeys">
+        <button type="button" data-cmp="before" aria-pressed="false">Before</button>
+        <button type="button" data-cmp="after" aria-pressed="true">After</button>
+      </div>
+      <ol class="path" id="path"></ol>
+      <p class="note" id="pathnote"></p>
+    </div>
+  </section>
+  <div class="phone" role="group" aria-label="Simulated Shop This Reel screen"><div class="screen" id="app"></div></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var PRODUCTS = [
+    { id: "shirt", name: "Linen Shirt", brand: "Studio Edit", price: "₹1,299", note: "“I wear M; size up.”", sizes: ["S", "M", "L", "XL"], c1: "#F3C2AE", c2: "#E58FA9", kind: "shirt" },
+    { id: "tote", name: "Sample Canvas Tote", brand: "Sample Brand", price: "₹799", note: "“Sample creator note: fits a laptop.”", sizes: ["One size"], c1: "#F6DDA6", c2: "#E9A877", kind: "bag" },
+    { id: "shades", name: "Sample Sunglasses", brand: "Sample Brand", price: "₹499", note: "“Sample creator note: light and easy.”", sizes: ["One size"], c1: "#D8C1EE", c2: "#A98BD6", kind: "shades" },
+    { id: "kicks", name: "Sample Sneakers", brand: "Sample Brand", price: "₹2,199", note: "“Sample creator note: runs true to size.”", sizes: ["6", "7", "8", "9"], c1: "#BFE0D6", c2: "#7FBFA9", kind: "shoe" }
+  ];
+  function find(id) { for (var i = 0; i < PRODUCTS.length; i++) if (PRODUCTS[i].id === id) return PRODUCTS[i]; return null; }
+  function fresh() { return { screen: "reel", pick: "shirt", size: "", toast: "" }; }
+  var S = fresh(), cmp = "after", toastTimer = null, lastScreen = "", lastFocus = "";
+
+  var ic = {
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    close: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    bag: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+    heart: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/></svg>',
+    chat: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    send: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 3L3 11l7 2 2 7z"/></svg>'
+  };
+  function art(kind, c2) {
+    var f = 'fill="rgba(255,255,255,.55)" stroke="rgba(255,255,255,.9)" stroke-width="2"';
+    if (kind === "shirt") return '<svg viewBox="0 0 100 100" aria-hidden="true"><path ' + f + ' d="M30 14l-20 12 8 16 10-5v43h44V37l10 5 8-16-20-12c-3 7-10 10-20 10s-17-3-20-10z"/></svg>';
+    if (kind === "bag") return '<svg viewBox="0 0 100 100" aria-hidden="true"><path ' + f + ' d="M20 34h60l-4 52H24z"/><path d="M36 34v-6a14 14 0 0 1 28 0v6" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="3"/></svg>';
+    if (kind === "shades") return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect ' + f + ' x="10" y="38" width="32" height="22" rx="9"/><rect ' + f + ' x="58" y="38" width="32" height="22" rx="9"/><path d="M42 46h16" stroke="rgba(255,255,255,.9)" stroke-width="3"/></svg>';
+    return '<svg viewBox="0 0 100 100" aria-hidden="true"><path ' + f + ' d="M10 62c10 0 14-6 18-14l8 6c6 4 14 6 22 8l20 4c6 1 12 4 12 10v4H10z"/></svg>';
+  }
+  function status(light) { return '<div class="status"' + (light ? "" : "") + '><span>9:41</span><span>5G</span></div>'; }
+
+  function reel() {
+    return '<div class="view reel">' + status() +
+      '<div class="art" aria-hidden="true">' + art("shirt") + '</div>' +
+      '<div class="spons">Sponsored</div>' +
+      '<div class="hint">Sample Reel. Creator and products are made up for this concept.</div>' +
+      '<div class="side-icons" aria-hidden="true"><span class="iconbtn">' + ic.heart + '</span><span class="iconbtn">' + ic.chat + '</span><span class="iconbtn">' + ic.send + '</span></div>' +
+      '<div class="reel-foot"><b>@sample.creator</b><span>My linen fit</span>' +
+      '<button type="button" class="cta" data-act="open">' + ic.bag + ' Shop This Reel</button></div></div>';
+  }
+  function panel() {
+    var list = PRODUCTS.map(function (p) {
+      return '<li><button type="button" class="prod" data-pick="' + p.id + '" aria-pressed="' + (S.pick === p.id) + '">' +
+        '<span class="thumb" style="background:linear-gradient(135deg,' + p.c1 + ',' + p.c2 + ')"><span style="width:44px;display:block">' + art(p.kind) + '</span></span>' +
+        '<span><b>' + p.name + '</b><small>' + p.brand + '</small><span class="price">' + p.price + ' <small style="display:inline">(sample price)</small></span></span></button></li>';
+    }).join("");
+    var p = find(S.pick);
+    return reel().replace('class="view reel"', 'class="view reel" aria-hidden="true" inert') +
+      '<button type="button" class="dim" data-act="close" aria-label="Close panel"></button>' +
+      '<div class="sheet enter" role="dialog" aria-label="Products in this Reel"><div class="grab"></div>' +
+      '<div class="sheet-h"><h2>Products in this Reel</h2><button type="button" class="xbtn" data-act="close" aria-label="Close panel">' + ic.close + '</button></div>' +
+      '<ul class="plist">' + list + '</ul>' +
+      '<p class="quote">' + p.note + '</p>' +
+      '<button type="button" class="btn primary" data-act="view">View product</button>' +
+      '<p class="samplenote">Sample products and prices, for illustration only.</p></div>';
+  }
+  function detail() {
+    var p = find(S.pick), one = p.sizes.length === 1;
+    var sz = p.sizes.map(function (s) { return '<button type="button" class="sz" data-size="' + s + '" aria-pressed="' + (S.size === s) + '">' + s + '</button>'; }).join("");
+    var ok = !!S.size;
+    return status() + '<div class="view"><div class="hdr"><button type="button" data-act="panel" aria-label="Back to products in this Reel">' + ic.back + '</button><div class="urlpill">External retailer</div></div>' +
+      '<div class="scroll"><div class="hero" style="background:linear-gradient(135deg,' + p.c1 + ',' + p.c2 + ')"><span style="width:120px;display:block">' + art(p.kind) + '</span></div>' +
+      '<h2>' + p.name + ' &middot; ' + p.price + '</h2><p class="sub">' + p.brand + ' &middot; sample product and price</p>' +
+      '<div class="lbl">' + (one ? "Size" : "Choose a size") + '<span>' + (ok ? "Selected: " + S.size : "None selected") + '</span></div>' +
+      '<div class="sizes" role="group" aria-label="Size">' + sz + '</div>' +
+      '<p class="attr">Purchase attribution where supported</p></div>' +
+      '<div class="foot"><button type="button" class="btn dark" data-act="buy"' + (ok ? "" : " disabled") + '>' + (ok ? "Buy now" : "Choose a size to continue") + '</button></div></div>';
+  }
+  function handoff() {
+    var p = find(S.pick);
+    return status() + '<div class="view"><div class="hdr"><button type="button" data-act="detail" aria-label="Back to product">' + ic.back + '</button><div class="urlpill">Buy now at the retailer</div></div>' +
+      '<div class="scroll"><div class="pickrow"><span class="thumb" style="background:linear-gradient(135deg,' + p.c1 + ',' + p.c2 + ')"><span style="width:44px;display:block">' + art(p.kind) + '</span></span>' +
+      '<div><b>' + p.name + '</b><div style="font-size:14px;color:#6B4A60">' + p.price + ' &middot; Size ' + S.size + '</div></div></div>' +
+      '<div class="card"><b>The purchase happens on the retailer’s site</b>Access starts with one tap in the Reel. You pay, enter your address and finish the order on the vendor site, not inside the Reel.</div>' +
+      '<div class="card green"><b>Purchase attribution where supported</b>Where the retailer supports it, the visit and purchase can be attributed back to the Reel and its creator.</div>' +
+      '<p class="samplenote" style="text-align:left">In this concept, nothing is opened, sent or bought.</p></div>' +
+      '<div class="foot"><button type="button" class="btn primary" data-act="go">Continue to retailer (simulated)</button><button type="button" class="btn outline" data-act="detail">Back to product</button></div></div>';
+  }
+
+  var order = ["reel", "panel", "detail", "handoff"];
+  var labels = { reel: "See the product on the Reel", panel: "Browse the products directly", detail: "Choose a size on the product page", handoff: "Buy with the vendor" };
+  function steps() {
+    var idx = order.indexOf(S.screen);
+    document.getElementById("steps").innerHTML = order.map(function (k, i) {
+      return '<li class="' + (i < idx ? "done" : i === idx ? "on" : "") + '"' + (i === idx ? ' aria-current="step"' : "") + '><b>' + (i + 1) + '</b>' + labels[k] + '</li>';
+    }).join("");
+  }
+  function paths() {
+    var before = ["Watch Reel", "Comment “LINK”", "Wait for the DM", "Find the DM", "Retailer, Buy"];
+    var after = ["Watch Reel", "Shop This Reel", "Product panel", "Retailer, Buy"];
+    var arr = cmp === "before" ? before : after;
+    document.getElementById("path").innerHTML = arr.map(function (t, i) {
+      return '<li' + (cmp === "before" && (i >= 1 && i <= 3) ? ' class="pain"' : "") + '>' + t + '</li>';
+    }).join("");
+    document.getElementById("pathnote").textContent = cmp === "before"
+      ? "Today’s journey. Friction: comment, wait, find the DM."
+      : "Proposed journey. Access starts with one tap; the purchase is completed on the vendor site.";
+    var bs = document.querySelectorAll("[data-cmp]");
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", String(bs[i].getAttribute("data-cmp") === cmp));
+  }
+  function render() {
+    var f = { reel: reel, panel: panel, detail: detail, handoff: handoff }[S.screen];
+    var el = document.getElementById("app");
+    el.innerHTML = f() + (S.toast ? '<div class="toast" role="status">' + S.toast + '</div>' : "");
+    if (S.screen !== lastScreen) {
+      var vw = el.querySelector(".view"); if (vw) vw.classList.add("enter");
+      lastScreen = S.screen; lastFocus = "";
+    }
+    steps();
+    var sel = lastFocus && el.querySelector(lastFocus);
+    if (sel) sel.focus();
+  }
+  function go(s) { S.screen = s; S.toast = ""; clearTimeout(toastTimer); render(); }
+  function focusKey(t) {
+    if (t.dataset.pick) lastFocus = '[data-pick="' + t.dataset.pick + '"]';
+    else if (t.dataset.size) lastFocus = '[data-size="' + t.dataset.size + '"]';
+    else lastFocus = "";
+  }
+
+  document.getElementById("app").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act],[data-pick],[data-size]"); if (!t) return;
+    if (t.dataset.pick) { S.pick = t.dataset.pick; S.size = ""; focusKey(t); return render(); }
+    if (t.dataset.size) { S.size = t.dataset.size; focusKey(t); return render(); }
+    var a = t.dataset.act;
+    if (a === "open") return go("panel");
+    if (a === "close") return go("reel");
+    if (a === "view") { var p = find(S.pick); S.size = p.sizes.length === 1 ? p.sizes[0] : ""; return go("detail"); }
+    if (a === "panel") return go("panel");
+    if (a === "buy") { if (!S.size) return; return go("handoff"); }
+    if (a === "detail") return go("detail");
+    if (a === "go") {
+      S.toast = "Concept only. In a real flow the retailer’s site would open here. Nothing was sent or bought.";
+      render(); clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { S.toast = ""; if (S.screen === "handoff") render(); }, 3200);
+    }
+  });
+  document.getElementById("app").addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && S.screen === "panel") go("reel");
+  });
+  document.getElementById("reset").addEventListener("click", function () { clearTimeout(toastTimer); S = fresh(); lastScreen = ""; render(); });
+  var cb = document.querySelectorAll("[data-cmp]");
+  for (var i = 0; i < cb.length; i++) cb[i].addEventListener("click", function (e) { cmp = e.currentTarget.getAttribute("data-cmp"); paths(); });
+  paths();
+  render();
+})();
+</script>
+</body>
+</html>
